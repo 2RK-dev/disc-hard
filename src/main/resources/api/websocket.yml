@@ -1,0 +1,461 @@
+asyncapi: 2.6.0
+info:
+  title: DiscHard WebSocket API for Spring Boot and Next.js
+  version: 1.0.0
+  description: WebSocket API using STOMP for real-time messaging in DiscHard application
+
+servers:
+  production:
+    url: ws://localhost:8080/ws
+    protocol: ws
+    description: DiscHard WebSocket server with STOMP support
+
+channels:
+  /app/connect:
+    publish:
+      summary: Connect and authenticate to the WebSocket server
+      operationId: connectWebSocket
+      message:
+        $ref: '#/components/messages/ConnectionRequest'
+
+  /app/messages:
+    publish:
+      summary: Send a new message to an existing conversation
+      operationId: sendMessage
+      message:
+        $ref: '#/components/messages/NewMessage'
+
+  /app/conversations/new:
+    publish:
+      summary: Start a new conversation with a user
+      operationId: startNewConversation
+      message:
+        $ref: '#/components/messages/StartConversationRequest'
+
+  /topic/conversations/{conversationId}:
+    parameters:
+      conversationId:
+        description: ID of the conversation
+        schema:
+          type: string
+    subscribe:
+      summary: Receive new messages in a specific conversation
+      operationId: receiveConversationMessages
+      message:
+        $ref: '#/components/messages/MessageReceived'
+
+  /user/queue/messages:
+    subscribe:
+      summary: Receive messages directed to the current user
+      operationId: receiveUserMessages
+      message:
+        $ref: '#/components/messages/MessageReceived'
+
+  /app/typing:
+    publish:
+      summary: Send typing indicator
+      operationId: sendTypingIndicator
+      message:
+        $ref: '#/components/messages/TypingIndicator'
+
+  /topic/conversations/{conversationId}/typing:
+    parameters:
+      conversationId:
+        description: ID of the conversation
+        schema:
+          type: string
+    subscribe:
+      summary: Receive typing indicators for a specific conversation
+      operationId: receiveTypingIndicators
+      message:
+        $ref: '#/components/messages/TypingIndicator'
+
+  /app/status:
+    publish:
+      summary: Update current user's status
+      operationId: updateUserStatus
+      message:
+        $ref: '#/components/messages/UserStatus'
+
+  /topic/users/status:
+    subscribe:
+      summary: Receive status updates of all users
+      operationId: receiveUserStatusUpdates
+      message:
+        $ref: '#/components/messages/UserStatusUpdate'
+
+  /topic/conversations/updates:
+    subscribe:
+      summary: Receive updates about conversations (new, modified, members)
+      operationId: receiveConversationsUpdates
+      message:
+        oneOf:
+          - $ref: '#/components/messages/ConversationCreated'
+          - $ref: '#/components/messages/ConversationUpdated'
+          - $ref: '#/components/messages/MembershipChanged'
+
+  /user/queue/notifications:
+    subscribe:
+      summary: Receive user-specific notifications
+      operationId: receiveUserNotifications
+      message:
+        $ref: '#/components/messages/UserNotification'
+
+components:
+  messages:
+    ConnectionRequest:
+      name: ConnectionRequest
+      title: WebSocket Connection Request
+      summary: Authentication request for WebSocket connection
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          token:
+            type: string
+            description: JWT token for authentication
+        required:
+          - token
+
+
+    StartConversationRequest:
+      name: StartConversationRequest
+      title: Start New Conversation Request
+      summary: Request to start a new conversation with a user
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          targetUserId:
+            type: string
+            description: ID of the user to start conversation with
+          initialMessage:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [ text ]
+                description: Type of message
+              content:
+                type: string
+                description: Content of the initial message
+              timestamp:
+                type: string
+                format: date-time
+                description: Time when message was sent
+        required:
+          - targetUserId
+          - initialMessage
+
+    NewMessage:
+      name: NewMessage
+      title: New Message
+      summary: A new message to be sent
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          conversationId:
+            type: string
+            description: ID of the conversation
+          type:
+            type: string
+            enum: [ text ]
+            description: Type of message
+          content:
+            type: string
+            description: Content of the message
+          timestamp:
+            type: string
+            format: date-time
+        required:
+          - conversationId
+          - type
+          - content
+          - timestamp
+
+    MessageReceived:
+      name: MessageReceived
+      title: Message Received
+      summary: A message received from the server
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          messageId:
+            type: string
+            description: Unique message identifier
+          conversationId:
+            type: string
+            description: ID of the conversation
+          senderId:
+            type: string
+            description: ID of the sender
+          senderUsername:
+            type: string
+            description: Username of the sender
+          type:
+            type: string
+            enum: [ text ]
+            description: Type of message
+          content:
+            type: string
+            description: Content of the message
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when message was sent
+        required:
+          - messageId
+          - conversationId
+          - senderId
+          - senderUsername
+          - type
+          - content
+          - timestamp
+
+    TypingIndicator:
+      name: TypingIndicator
+      title: Typing Indicator
+      summary: Indicates a user is typing in a conversation
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          conversationId:
+            type: string
+            description: ID of the conversation
+          userId:
+            type: string
+            description: ID of the user who is typing
+          username:
+            type: string
+            description: Username of the user who is typing
+          isTyping:
+            type: boolean
+            description: Whether the user is typing or stopped typing
+          timestamp:
+            type: string
+            format: date-time
+        required:
+          - conversationId
+          - userId
+          - isTyping
+          - timestamp
+
+    UserStatus:
+      name: UserStatus
+      title: User Status Update Request
+      summary: Request to update the user's status
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          status:
+            type: string
+            enum: [ online, offline, away, do_not_disturb ]
+            description: New status of the user
+        required:
+          - status
+
+    UserStatusUpdate:
+      name: UserStatusUpdate
+      title: User Status Update
+      summary: Update on a user's status
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          userId:
+            type: string
+            description: ID of the user
+          username:
+            type: string
+            description: Username of the user
+          status:
+            type: string
+            enum: [ online, offline, away, do_not_disturb ]
+            description: Current status of the user
+          lastSeen:
+            type: string
+            format: date-time
+            description: Time when user was last seen (only for offline status)
+        required:
+          - userId
+          - username
+          - status
+
+    ConversationCreated:
+      name: ConversationCreated
+      title: Conversation Created
+      summary: A new conversation has been created
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          conversationId:
+            type: string
+            description: ID of the new conversation
+          type:
+            type: string
+            enum: [ private, group ]
+            description: Type of conversation
+          name:
+            type: string
+            description: Name of the group (only for group conversations)
+          createdBy:
+            type: object
+            properties:
+              userId:
+                type: string
+              username:
+                type: string
+            description: User who created the conversation
+          participants:
+            type: array
+            items:
+              type: object
+              properties:
+                userId:
+                  type: string
+                username:
+                  type: string
+            description: List of participants in the conversation
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when conversation was created
+        required:
+          - conversationId
+          - type
+          - createdBy
+          - participants
+          - timestamp
+
+    ConversationUpdated:
+      name: ConversationUpdated
+      title: Conversation Updated
+      summary: A conversation has been updated
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          conversationId:
+            type: string
+            description: ID of the conversation
+          name:
+            type: string
+            description: New name of the group
+          updatedBy:
+            type: object
+            properties:
+              userId:
+                type: string
+              username:
+                type: string
+            description: User who updated the conversation
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when conversation was updated
+        required:
+          - conversationId
+          - updatedBy
+          - timestamp
+
+    MembershipChanged:
+      name: MembershipChanged
+      title: Conversation Membership Changed
+      summary: Members of a conversation have changed
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          conversationId:
+            type: string
+            description: ID of the conversation
+          type:
+            type: string
+            enum: [ added, removed ]
+            description: Type of membership change
+          user:
+            type: object
+            properties:
+              userId:
+                type: string
+              username:
+                type: string
+            description: User who was added or removed
+          changedBy:
+            type: object
+            properties:
+              userId:
+                type: string
+              username:
+                type: string
+            description: User who made the change (null if user left voluntarily)
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when membership changed
+        required:
+          - conversationId
+          - type
+          - user
+          - timestamp
+
+    UserNotification:
+      name: UserNotification
+      title: User Notification
+      summary: A notification for the user
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          id:
+            type: string
+            description: Unique notification ID
+          type:
+            type: string
+            enum: [ message, invitation, system ]
+            description: Type of notification
+          title:
+            type: string
+            description: Short title of notification
+          content:
+            type: string
+            description: Content of notification
+          source:
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+                enum: [ user, conversation, system ]
+              name:
+                type: string
+            description: Source of the notification
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when notification was created
+          read:
+            type: boolean
+            default: false
+            description: Whether notification has been read
+          actionUrl:
+            type: string
+            description: URL to navigate to when notification is clicked
+        required:
+          - id
+          - type
+          - content
+          - timestamp
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for WebSocket authentication
