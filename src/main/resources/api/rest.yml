@@ -101,18 +101,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateGroupResponse'
+                $ref: '#/components/schemas/GroupInfoResponse'
         404:
           description: One or more of the group's would-be members do not exist
 
-  /groups/{group_id}/members/me:
+  /groups/{groupId}/members/me:
     delete:
       description: Leave a group
       security:
         - bearerAuth: [ ]
       parameters:
         - in: path
-          name: group_id
+          name: groupId
           required: true
           description: The ID of the group/conversation the user wants to leave
           schema:
@@ -125,14 +125,39 @@ paths:
         404:
           description: The group with the provided ID does not exist, or the user making the request is not a member of the group
 
-  /groups/{group_id}/members:
+  /groups/{groupId}/members:
+    get:
+      description: Get the participants of a group chat
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          description: The ID of the group to invite an user to
+          schema:
+            type: string
+      responses:
+        200:
+          description: The list of group participants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupParticipantsResponse'
+        400:
+          description: The conversation is not a group chat, can't invite any more member
+        403:
+          description: The user is not a member of the requested group
+        404:
+          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
+
     post:
       description: Invite a user to a group
       security:
         - bearerAuth: [ ]
       parameters:
         - in: path
-          name: group_id
+          name: groupId
           required: true
           description: The ID of the group to invite an user to
           schema:
@@ -153,14 +178,14 @@ paths:
         404:
           description: The group with the provided ID does not exist, or the user making the request is not a member of the group
 
-  /groups/{group_id}:
+  /groups/{groupId}:
     get:
       description: Fetch the informations about a group
       security:
         - bearerAuth: [ ]
       parameters:
         - in: path
-          name: group_id
+          name: groupId
           required: true
           schema:
             type: string
@@ -180,13 +205,13 @@ paths:
       description: List all the registered users
       parameters:
         - in: query
-          name: username_filter
+          name: usernameFilter
           required: false
           schema:
             type: string
           description: Username search criteria
         - in: query
-          name: email_filter
+          name: emailFilter
           required: false
           schema:
             type: string
@@ -199,12 +224,12 @@ paths:
                 $ref: '#/components/schemas/UserListResponse'
           description: A list of users
 
-  /users/{user_id}:
+  /users/{userId}:
     get:
       description: Get a user's information
       parameters:
         - in: path
-          name: user_id
+          name: userId
           description: ID of the user
           required: true
           schema:
@@ -232,14 +257,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConversationListResponse'
 
-  /conversations/{conversation_id}/messages:
+  /conversations/{conversationId}/messages:
     get:
       description: Fetch the messages in a conversation with pagination following HATEOAS
       security:
         - bearerAuth: [ ]
       parameters:
         - in: path
-          name: conversation_id
+          name: conversationId
           required: true
           description: The ID of the conversation
           schema:
@@ -273,14 +298,14 @@ paths:
         404:
           description: The conversation with the provided ID does not exist
 
-  /conversations/{conversation_id}/participants:
+  /conversations/{conversationId}/participants:
     get:
       description: Fetches the list of participants of a DM or a group chat
       security:
         - bearerAuth: [ ]
       parameters:
         - in: path
-          name: conversation_id
+          name: conversationId
           required: true
           description: the ID of the conversation
           schema:
@@ -312,7 +337,7 @@ components:
     GroupInfoResponse:
       type: object
       properties:
-        conversation_id:
+        conversationId:
           type: string
           description: ID of the conversation represented by the group
         type:
@@ -321,10 +346,21 @@ components:
         name:
           type: string
           description: name of the group
-        created_at:
+        description:
+          type: string
+        createdAt:
           type: string
           format: date-time
           description: time of creation of the group
+
+    GroupParticipantsResponse:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          description: Array of Users, members of the group
 
     MessagePagedResponse:
       type: object
@@ -337,20 +373,20 @@ components:
               items:
                 type: object
                 properties:
-                  message_id:
+                  messageId:
                     type: string
-                  sent_at:
+                  sentAt:
                     type: string
                     format: date-time
                   type:
                     type: string
                     description: Type of the message
-                  text_content:
+                  textContent:
                     type: string
                   sender:
                     type: object
                     properties:
-                      user_id:
+                      userId:
                         type: string
                       username:
                         type: string
@@ -411,26 +447,26 @@ components:
       items:
         type: object
         properties:
-          conversation_id:
+          conversationId:
             type: string
           type:
             type: string
             description: group or private message
-          group_name:
+          groupName:
             type: string
             description: name of the group chat if that's the type of the conversation
-          contact_username:
+          contactUsername:
             type: string
             description: name of the contact if the conversation is a private message
-          last_message:
+          lastMessage:
             type: object
             properties:
-              text_preview:
+              textPreview:
                 type: string
                 description: Preview of the last message content
-              sender_username:
+              senderUsername:
                 type: string
-              sent_at:
+              sentAt:
                 type: string
                 format: date-time
             description: Preview of the last message in the conversation
@@ -444,11 +480,11 @@ components:
     User:
       type: object
       properties:
-        user_id:
+        userId:
           type: string
         email:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
         username:
@@ -457,35 +493,20 @@ components:
     GroupInvitationRequest:
       type: object
       properties:
-        user_ids:
+        userIds:
           type: array
           items:
             type: string
           description: Array of user IDs to invite in the group
 
-    CreateGroupResponse:
-      type: object
-      properties:
-        conversation_id:
-          type: string
-          description: identifier of the conversation represented by the group
-        created_at:
-          type: string
-          format: date-time
-          description: time of creation of the group
-        type:
-          type: string
-          description: type of the conversation, in this case a group
-        participants:
-          type: array
-          items:
-            type: string
-          description: Array of user IDs to members of the group
-
     CreateGroupRequest:
       type: object
       properties:
-        group_name:
+        name:
+          description: Name of the group to create
+          type: string
+        description:
+          description: Description of the group to create
           type: string
         participants:
           type: array
@@ -496,11 +517,11 @@ components:
     PasswordChangeRequest:
       type: object
       properties:
-        old_password:
+        oldPassword:
           type: string
-        new_password:
+        newPassword:
           type: string
-        confirm_new_password:
+        confirmNewPassword:
           type: string
 
     ProfileModificationResponse:
@@ -520,12 +541,12 @@ components:
     LoginResponse:
       type: object
       properties:
-        access_token:
+        accessToken:
           type: string
         user:
           type: object
           properties:
-            user_id:
+            userId:
               type: string
             username:
               type: string
@@ -547,7 +568,7 @@ components:
           type: string
         password:
           type: string
-        password_confirmation:
+        passwordConfirmation:
           type: string
         username:
           type: string
