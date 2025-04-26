@@ -1,0 +1,581 @@
+openapi: 3.1.0
+info:
+  title: DiscHard API documentation
+  description: DiscHard API documentation - REST endpoints for user management and message history
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080'
+paths:
+  /register:
+    post:
+      description: Register a new account
+      requestBody:
+        description: User information
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        204:
+          description: The user was registered successfully
+        400:
+          description: The password and its confirmation differ
+        409:
+          description: The email is already taken, an user with the email is already registered
+
+  /login:
+    post:
+      description: Log into an account
+      requestBody:
+        description: Credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        401:
+          description: The credentials do not match, are incorrect
+
+  /profile:
+    patch:
+      description: Modify the profile information
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileModificationRequest'
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileModificationResponse'
+        400:
+          description: Invalid username
+
+  /password:
+    put:
+      description: Changes password
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        204:
+          description: Success
+        400:
+          description: New password and its confirmation differ
+        401:
+          description: Old password is incorrect
+
+  /groups:
+    post:
+      description: Create a new group chat
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGroupRequest'
+      responses:
+        201:
+          description: Group created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInfoResponse'
+        404:
+          description: One or more of the group's would-be members do not exist
+
+  /groups/{groupId}/members/me:
+    delete:
+      description: Leave a group
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          description: The ID of the group/conversation the user wants to leave
+          schema:
+            type: string
+      responses:
+        204:
+          description: Left successfully
+        400:
+          description: The conversation is not a group chat, you can't leave
+        404:
+          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
+
+  /groups/{groupId}/members:
+    get:
+      description: Get the participants of a group chat
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          description: The ID of the group to invite an user to
+          schema:
+            type: string
+      responses:
+        200:
+          description: The list of group participants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupParticipantsResponse'
+        400:
+          description: The conversation is not a group chat, can't invite any more member
+        403:
+          description: The user is not a member of the requested group
+        404:
+          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
+
+    post:
+      description: Invite a user to a group
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          description: The ID of the group to invite an user to
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInvitationRequest'
+      responses:
+        204:
+          description: Added successfully
+        400:
+          description: The conversation is not a group chat, can't invite any more member
+        403:
+          description: No permission to invite members (if the group has admins)
+        404:
+          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
+
+  /groups/{groupId}:
+    get:
+      description: Fetch the informations about a group
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: groupId
+          required: true
+          schema:
+            type: string
+          description: The ID of the queried group
+      responses:
+        200:
+          description: Informations about the group
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupInfoResponse'
+        404:
+          description: The group does not exist
+
+  /users:
+    get:
+      description: List all the registered users
+      parameters:
+        - in: query
+          name: usernameFilter
+          required: false
+          schema:
+            type: string
+          description: Username search criteria
+        - in: query
+          name: emailFilter
+          required: false
+          schema:
+            type: string
+          description: Email search criteria
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+          description: A list of users
+
+  /users/{userId}:
+    get:
+      description: Get a user's information
+      parameters:
+        - in: path
+          name: userId
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The informations about the requested user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: The user with the provided ID does not exist
+
+  /conversations:
+    get:
+      security:
+        - bearerAuth: [ ]
+      description: Fetch all the conversations the current user is in
+      responses:
+        200:
+          description: list of the conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationListResponse'
+
+  /conversations/{conversationId}/messages:
+    get:
+      description: Fetch the messages in a conversation with pagination following HATEOAS
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          description: The ID of the conversation
+          schema:
+            type: string
+        - in: query
+          name: page
+          required: false
+          description: Page number (zero-based)
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - in: query
+          name: size
+          required: false
+          description: Number of messages per page
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        200:
+          description: A paginated list of messages with HATEOAS links
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagePagedResponse'
+        403:
+          description: The user is not allowed to view the requested conversation
+        404:
+          description: The conversation with the provided ID does not exist
+
+  /conversations/{conversationId}/participants:
+    get:
+      description: Fetches the list of participants of a DM or a group chat
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: conversationId
+          required: true
+          description: the ID of the conversation
+          schema:
+            type: string
+      responses:
+        200:
+          description: a list of the participants of the conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantListResponse'
+        403:
+          description: the user is not allowed to view the requested conversation
+        404:
+          description: the conversation with the provided ID does not exist
+
+components:
+  schemas:
+    ParticipantListResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          alias:
+            type: string
+          user:
+            $ref: '#/components/schemas/User'
+
+    GroupInfoResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+          description: ID of the conversation represented by the group
+        type:
+          type: string
+          description: type of the conversation, in this context a group
+        name:
+          type: string
+          description: name of the group
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          description: time of creation of the group
+
+    GroupParticipantsResponse:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          description: Array of Users, members of the group
+
+    MessagePagedResponse:
+      type: object
+      properties:
+        _embedded:
+          type: object
+          properties:
+            messages:
+              type: array
+              items:
+                type: object
+                properties:
+                  messageId:
+                    type: string
+                  sentAt:
+                    type: string
+                    format: date-time
+                  type:
+                    type: string
+                    description: Type of the message
+                  textContent:
+                    type: string
+                  sender:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                      username:
+                        type: string
+                      alias:
+                        type: string
+                    description: Information about the sender of the message
+        page:
+          type: object
+          properties:
+            size:
+              type: integer
+              description: Number of elements per page
+            totalElements:
+              type: integer
+              description: Total number of elements across all pages
+            totalPages:
+              type: integer
+              description: Total number of pages
+            number:
+              type: integer
+              description: Current page number (zero-based)
+        _links:
+          type: object
+          properties:
+            self:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: Link to the current page
+            first:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: Link to the first page
+            prev:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: Link to the previous page
+            next:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: Link to the next page
+            last:
+              type: object
+              properties:
+                href:
+                  type: string
+                  description: Link to the last page
+
+    ConversationListResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          conversationId:
+            type: string
+          type:
+            type: string
+            description: group or private message
+          groupName:
+            type: string
+            description: name of the group chat if that's the type of the conversation
+          contactUsername:
+            type: string
+            description: name of the contact if the conversation is a private message
+          lastMessage:
+            type: object
+            properties:
+              textPreview:
+                type: string
+                description: Preview of the last message content
+              senderUsername:
+                type: string
+              sentAt:
+                type: string
+                format: date-time
+            description: Preview of the last message in the conversation
+
+    UserListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/User'
+      description: a list of users
+
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        username:
+          type: string
+
+    GroupInvitationRequest:
+      type: object
+      properties:
+        userIds:
+          type: array
+          items:
+            type: string
+          description: Array of user IDs to invite in the group
+
+    CreateGroupRequest:
+      type: object
+      properties:
+        name:
+          description: Name of the group to create
+          type: string
+        description:
+          description: Description of the group to create
+          type: string
+        participants:
+          type: array
+          items:
+            type: string
+          description: Array of user IDs to include in the group
+
+    PasswordChangeRequest:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+        newPassword:
+          type: string
+        confirmNewPassword:
+          type: string
+
+    ProfileModificationResponse:
+      type: object
+      properties:
+        email:
+          type: string
+        username:
+          type: string
+
+    ProfileModificationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        user:
+          type: object
+          properties:
+            userId:
+              type: string
+            username:
+              type: string
+            email:
+              type: string
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    RegistrationRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        passwordConfirmation:
+          type: string
+        username:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: Access token to authenticate and authorize requests
+      scheme: bearer
+      bearerFormat: JWT
