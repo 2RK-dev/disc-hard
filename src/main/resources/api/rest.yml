@@ -329,6 +329,8 @@ components:
       items:
         type: object
         properties:
+          id:
+            type: string
           alias:
             type: string
           user:
