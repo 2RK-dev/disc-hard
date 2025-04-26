@@ -365,34 +365,31 @@ components:
     MessagePagedResponse:
       type: object
       properties:
-        _embedded:
-          type: object
-          properties:
-            messages:
-              type: array
-              items:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              messageId:
+                type: string
+              sentAt:
+                type: string
+                format: date-time
+              type:
+                type: string
+                description: Type of the message
+              textContent:
+                type: string
+              sender:
                 type: object
                 properties:
-                  messageId:
+                  userId:
                     type: string
-                  sentAt:
+                  username:
                     type: string
-                    format: date-time
-                  type:
+                  alias:
                     type: string
-                    description: Type of the message
-                  textContent:
-                    type: string
-                  sender:
-                    type: object
-                    properties:
-                      userId:
-                        type: string
-                      username:
-                        type: string
-                      alias:
-                        type: string
-                    description: Information about the sender of the message
+                description: Information about the sender of the message
         page:
           type: object
           properties:
@@ -408,39 +405,6 @@ components:
             number:
               type: integer
               description: Current page number (zero-based)
-        _links:
-          type: object
-          properties:
-            self:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the current page
-            first:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the first page
-            prev:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the previous page
-            next:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the next page
-            last:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the last page
 
     ConversationListResponse:
       type: array
