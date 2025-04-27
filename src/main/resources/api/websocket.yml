@@ -127,7 +127,7 @@ components:
         type: object
         properties:
           targetUserId:
-            type: string
+            type: number
             description: ID of the user to start conversation with
           initialMessage:
             type: object
@@ -156,7 +156,7 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           type:
             type: string
@@ -182,7 +182,7 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           message:
             $ref: 'commons.yml#/components/schemas/Message'
@@ -196,10 +196,10 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           participantId:
-            type: string
+            type: number
             description: ID of the participant who's typing
           isTyping:
             type: boolean
@@ -260,7 +260,7 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the new conversation
           type:
             type: string
@@ -297,7 +297,7 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           name:
             type: string
@@ -326,7 +326,7 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           type:
             type: string
@@ -359,7 +359,7 @@ components:
         type: object
         properties:
           id:
-            type: string
+            type: number
             description: Unique notification ID
           type:
             type: string
@@ -375,7 +375,7 @@ components:
             type: object
             properties:
               id:
-                type: string
+                type: number
               type:
                 type: string
                 enum: [ user, conversation, system ]

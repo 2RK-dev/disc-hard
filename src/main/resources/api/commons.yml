@@ -8,7 +8,7 @@ components:
       type: object
       properties:
         id:
-          type: string
+          type: number
         alias:
           type: string
         user:
@@ -18,20 +18,20 @@ components:
       type: object
       properties:
         id:
+          type: number
+        name:
           type: string
         email:
           type: string
         createdAt:
           type: string
           format: date-time
-        name:
-          type: string
 
     Message:
       type: object
       properties:
         id:
-          type: string
+          type: number
           description: Unique message identifier
         type:
           type: string
@@ -43,7 +43,7 @@ components:
           type: string
           format: date-time
           description: Time when message was sent
-        sender:
+        author:
           $ref: '#/components/schemas/Participant'
 
     Page:

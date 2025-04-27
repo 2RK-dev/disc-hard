@@ -333,7 +333,7 @@ components:
       type: object
       properties:
         conversationId:
-          type: string
+          type: number
           description: ID of the conversation represented by the group
         type:
           type: string
@@ -373,7 +373,7 @@ components:
         type: object
         properties:
           id:
-            type: string
+            type: number
           type:
             type: string
             description: group or private message
