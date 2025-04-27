@@ -185,7 +185,7 @@ components:
             type: string
             description: ID of the conversation
           message:
-            $ref: 'commons.yml/#/components/schemas/Message'
+            $ref: 'commons.yml#/components/schemas/Message'
 
     TypingIndicator:
       name: TypingIndicator
@@ -237,7 +237,7 @@ components:
         type: object
         properties:
           user:
-            $ref: 'commons.yml/#/components/schemas/User'
+            $ref: 'commons.yml#/components/schemas/User'
           status:
             type: string
             enum: [ online, offline, away, do_not_disturb ]
@@ -270,12 +270,12 @@ components:
             type: string
             description: Name of the group (only for group conversations)
           createdBy:
-            $ref: 'commons.yml/#/components/schemas/User'
+            $ref: 'commons.yml#/components/schemas/User'
             description: User who created the conversation
           participants:
             type: array
             items:
-              $ref: 'commons.yml/#/components/schemas/Participant'
+              $ref: 'commons.yml#/components/schemas/Participant'
             description: List of participants in the conversation
           timestamp:
             type: string
@@ -306,7 +306,7 @@ components:
             type: string
             description: New description of the group
           updatedBy:
-            $ref: 'commons.yml/#/components/schemas/User'
+            $ref: 'commons.yml#/components/schemas/User'
             description: User who updated the conversation
           timestamp:
             type: string
@@ -335,10 +335,10 @@ components:
           users:
             type: array
             items:
-              $ref: 'commons.yml/#/components/schemas/User'
+              $ref: 'commons.yml#/components/schemas/User'
             description: List of Users who were added or removed
           changedBy:
-            $ref: 'commons.yml/#/components/schemas/User'
+            $ref: 'commons.yml#/components/schemas/User'
             description: User who made the change (null if user left voluntarily)
           timestamp:
             type: string
