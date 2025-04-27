@@ -24,7 +24,7 @@ components:
         createdAt:
           type: string
           format: date-time
-        username:
+        name:
           type: string
 
     Message:
