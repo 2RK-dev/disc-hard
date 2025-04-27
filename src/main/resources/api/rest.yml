@@ -240,7 +240,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: './commons.yml/#/components/schemas/User'
         404:
           description: The user with the provided ID does not exist
 
@@ -327,14 +327,7 @@ components:
     ParticipantListResponse:
       type: array
       items:
-        type: object
-        properties:
-          id:
-            type: string
-          alias:
-            type: string
-          user:
-            $ref: '#/components/schemas/User'
+        $ref: './commons.yml/#/components/schemas/Participant'
 
     GroupInfoResponse:
       type: object
@@ -361,7 +354,7 @@ components:
         participants:
           type: array
           items:
-            $ref: '#/components/schemas/User'
+            $ref: './commons.yml/#/components/schemas/Participant'
           description: Array of Users, members of the group
 
     MessagePagedResponse:
@@ -370,50 +363,16 @@ components:
         messages:
           type: array
           items:
-            type: object
-            properties:
-              messageId:
-                type: string
-              sentAt:
-                type: string
-                format: date-time
-              type:
-                type: string
-                description: Type of the message
-              textContent:
-                type: string
-              sender:
-                type: object
-                properties:
-                  userId:
-                    type: string
-                  username:
-                    type: string
-                  alias:
-                    type: string
-                description: Information about the sender of the message
+            $ref: './commons.yml/#/components/schemas/Message'
         page:
-          type: object
-          properties:
-            size:
-              type: integer
-              description: Number of elements per page
-            totalElements:
-              type: integer
-              description: Total number of elements across all pages
-            totalPages:
-              type: integer
-              description: Total number of pages
-            number:
-              type: integer
-              description: Current page number (zero-based)
+          $ref: './commons.yml/#/components/schemas/Page'
 
     ConversationListResponse:
       type: array
       items:
         type: object
         properties:
-          conversationId:
+          id:
             type: string
           type:
             type: string
@@ -440,21 +399,8 @@ components:
     UserListResponse:
       type: array
       items:
-        $ref: '#/components/schemas/User'
+        $ref: './commons.yml/#/components/schemas/User'
       description: a list of users
-
-    User:
-      type: object
-      properties:
-        userId:
-          type: string
-        email:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        username:
-          type: string
 
     GroupInvitationRequest:
       type: object
@@ -510,14 +456,7 @@ components:
         accessToken:
           type: string
         user:
-          type: object
-          properties:
-            userId:
-              type: string
-            username:
-              type: string
-            email:
-              type: string
+          $ref: '/commons.yml/#/components/schemas/User'
 
     LoginRequest:
       type: object
