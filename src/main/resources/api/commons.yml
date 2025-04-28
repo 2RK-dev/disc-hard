@@ -4,7 +4,7 @@ info:
   version: '1.0'
 components:
   schemas:
-    Participant:
+    Member:
       type: object
       properties:
         id:
@@ -13,6 +13,9 @@ components:
           type: string
         user:
           $ref: '#/components/schemas/User'
+        role:
+          type: string
+          description: Role of the member in the conversation
 
     User:
       type: object
@@ -26,6 +29,12 @@ components:
         createdAt:
           type: string
           format: date-time
+        avatar:
+          type: string
+          description: The URI of the avatar image of the user
+        status:
+          type: string
+          description: The user's active status (online, idle, dnd, offline)
 
     Message:
       type: object
@@ -44,7 +53,7 @@ components:
           format: date-time
           description: Time when message was sent
         author:
-          $ref: '#/components/schemas/Participant'
+          $ref: '#/components/schemas/Member'
 
     Page:
       description: A page metadata in a paginated resource

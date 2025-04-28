@@ -198,9 +198,9 @@ components:
           conversationId:
             type: number
             description: ID of the conversation
-          participantId:
+          memberId:
             type: number
-            description: ID of the participant who's typing
+            description: ID of the member who's typing
           isTyping:
             type: boolean
             description: Whether the user is typing or stopped typing
@@ -209,7 +209,7 @@ components:
             format: date-time
         required:
           - conversationId
-          - participantId
+          - memberId
           - isTyping
           - timestamp
 
@@ -272,11 +272,11 @@ components:
           createdBy:
             $ref: 'commons.yml#/components/schemas/User'
             description: User who created the conversation
-          participants:
+          members:
             type: array
             items:
-              $ref: 'commons.yml#/components/schemas/Participant'
-            description: List of participants in the conversation
+              $ref: 'commons.yml#/components/schemas/Member'
+            description: List of members in the conversation
           timestamp:
             type: string
             format: date-time
@@ -285,7 +285,7 @@ components:
           - conversationId
           - type
           - createdBy
-          - participants
+          - members
           - timestamp
 
     ConversationUpdated:

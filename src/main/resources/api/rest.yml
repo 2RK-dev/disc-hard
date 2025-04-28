@@ -127,7 +127,7 @@ paths:
 
   /groups/{groupId}/members:
     get:
-      description: Get the participants of a group chat
+      description: Get the members of a group chat
       security:
         - bearerAuth: [ ]
       parameters:
@@ -139,11 +139,11 @@ paths:
             type: string
       responses:
         200:
-          description: The list of group participants
+          description: The list of group members
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupParticipantsResponse'
+                $ref: '#/components/schemas/GroupMembersResponse'
         400:
           description: The conversation is not a group chat, can't invite any more member
         403:
@@ -298,9 +298,9 @@ paths:
         404:
           description: The conversation with the provided ID does not exist
 
-  /conversations/{conversationId}/participants:
+  /conversations/{conversationId}/members:
     get:
-      description: Fetches the list of participants of a DM or a group chat
+      description: Fetches the list of members of a DM or a group chat
       security:
         - bearerAuth: [ ]
       parameters:
@@ -312,11 +312,11 @@ paths:
             type: string
       responses:
         200:
-          description: a list of the participants of the conversation
+          description: a list of the members of the conversation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParticipantListResponse'
+                $ref: '#/components/schemas/MemberListResponse'
         403:
           description: the user is not allowed to view the requested conversation
         404:
@@ -324,10 +324,10 @@ paths:
 
 components:
   schemas:
-    ParticipantListResponse:
+    MemberListResponse:
       type: array
       items:
-        $ref: 'commons.yml#/components/schemas/Participant'
+        $ref: 'commons.yml#/components/schemas/Member'
 
     GroupInfoResponse:
       type: object
@@ -348,13 +348,13 @@ components:
           format: date-time
           description: time of creation of the group
 
-    GroupParticipantsResponse:
+    GroupMembersResponse:
       type: object
       properties:
-        participants:
+        members:
           type: array
           items:
-            $ref: 'commons.yml#/components/schemas/Participant'
+            $ref: 'commons.yml#/components/schemas/Member'
           description: Array of Users, members of the group
 
     MessagePagedResponse:
@@ -420,7 +420,7 @@ components:
         description:
           description: Description of the group to create
           type: string
-        participants:
+        members:
           type: array
           items:
             type: string
