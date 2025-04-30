@@ -127,7 +127,7 @@ paths:
 
   /groups/{groupId}/members:
     get:
-      description: Get the participants of a group chat
+      description: Get the members of a group chat
       security:
         - bearerAuth: [ ]
       parameters:
@@ -139,11 +139,11 @@ paths:
             type: string
       responses:
         200:
-          description: The list of group participants
+          description: The list of group members
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupParticipantsResponse'
+                $ref: '#/components/schemas/GroupMembersResponse'
         400:
           description: The conversation is not a group chat, can't invite any more member
         403:
@@ -240,7 +240,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: 'commons.yml#/components/schemas/User'
         404:
           description: The user with the provided ID does not exist
 
@@ -298,9 +298,9 @@ paths:
         404:
           description: The conversation with the provided ID does not exist
 
-  /conversations/{conversationId}/participants:
+  /conversations/{conversationId}/members:
     get:
-      description: Fetches the list of participants of a DM or a group chat
+      description: Fetches the list of members of a DM or a group chat
       security:
         - bearerAuth: [ ]
       parameters:
@@ -312,11 +312,11 @@ paths:
             type: string
       responses:
         200:
-          description: a list of the participants of the conversation
+          description: a list of the members of the conversation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParticipantListResponse'
+                $ref: '#/components/schemas/MemberListResponse'
         403:
           description: the user is not allowed to view the requested conversation
         404:
@@ -324,21 +324,16 @@ paths:
 
 components:
   schemas:
-    ParticipantListResponse:
+    MemberListResponse:
       type: array
       items:
-        type: object
-        properties:
-          alias:
-            type: string
-          user:
-            $ref: '#/components/schemas/User'
+        $ref: 'commons.yml#/components/schemas/Member'
 
     GroupInfoResponse:
       type: object
       properties:
         conversationId:
-          type: string
+          type: number
           description: ID of the conversation represented by the group
         type:
           type: string
@@ -353,102 +348,32 @@ components:
           format: date-time
           description: time of creation of the group
 
-    GroupParticipantsResponse:
+    GroupMembersResponse:
       type: object
       properties:
-        participants:
+        members:
           type: array
           items:
-            $ref: '#/components/schemas/User'
+            $ref: 'commons.yml#/components/schemas/Member'
           description: Array of Users, members of the group
 
     MessagePagedResponse:
       type: object
       properties:
-        _embedded:
-          type: object
-          properties:
-            messages:
-              type: array
-              items:
-                type: object
-                properties:
-                  messageId:
-                    type: string
-                  sentAt:
-                    type: string
-                    format: date-time
-                  type:
-                    type: string
-                    description: Type of the message
-                  textContent:
-                    type: string
-                  sender:
-                    type: object
-                    properties:
-                      userId:
-                        type: string
-                      username:
-                        type: string
-                      alias:
-                        type: string
-                    description: Information about the sender of the message
+        messages:
+          type: array
+          items:
+            $ref: 'commons.yml#/components/schemas/Message'
         page:
-          type: object
-          properties:
-            size:
-              type: integer
-              description: Number of elements per page
-            totalElements:
-              type: integer
-              description: Total number of elements across all pages
-            totalPages:
-              type: integer
-              description: Total number of pages
-            number:
-              type: integer
-              description: Current page number (zero-based)
-        _links:
-          type: object
-          properties:
-            self:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the current page
-            first:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the first page
-            prev:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the previous page
-            next:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the next page
-            last:
-              type: object
-              properties:
-                href:
-                  type: string
-                  description: Link to the last page
+          $ref: 'commons.yml#/components/schemas/Page'
 
     ConversationListResponse:
       type: array
       items:
         type: object
         properties:
-          conversationId:
-            type: string
+          id:
+            type: number
           type:
             type: string
             description: group or private message
@@ -474,21 +399,8 @@ components:
     UserListResponse:
       type: array
       items:
-        $ref: '#/components/schemas/User'
+        $ref: 'commons.yml#/components/schemas/User'
       description: a list of users
-
-    User:
-      type: object
-      properties:
-        userId:
-          type: string
-        email:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        username:
-          type: string
 
     GroupInvitationRequest:
       type: object
@@ -508,7 +420,7 @@ components:
         description:
           description: Description of the group to create
           type: string
-        participants:
+        members:
           type: array
           items:
             type: string
@@ -544,14 +456,7 @@ components:
         accessToken:
           type: string
         user:
-          type: object
-          properties:
-            userId:
-              type: string
-            username:
-              type: string
-            email:
-              type: string
+          $ref: 'commons.yml#/components/schemas/User'
 
     LoginRequest:
       type: object

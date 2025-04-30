@@ -1,0 +1,73 @@
+openapi: 3.1.0
+info:
+  title: Common schemas
+  version: '1.0'
+components:
+  schemas:
+    Member:
+      type: object
+      properties:
+        id:
+          type: number
+        alias:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          type: string
+          description: Role of the member in the conversation
+
+    User:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        avatar:
+          type: string
+          description: The URI of the avatar image of the user
+        status:
+          type: string
+          description: The user's active status (online, idle, dnd, offline)
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Unique message identifier
+        type:
+          type: string
+          enum: [ text ]
+          description: Type of message
+        textContent:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+          description: Time when message was sent
+        author:
+          $ref: '#/components/schemas/Member'
+
+    Page:
+      description: A page metadata in a paginated resource
+      type: object
+      properties:
+        size:
+          type: integer
+          description: Number of elements per page
+        totalElements:
+          type: integer
+          description: Total number of elements across all pages
+        totalPages:
+          type: integer
+          description: Total number of pages
+        number:
+          type: integer
+          description: Current page number

@@ -127,7 +127,7 @@ components:
         type: object
         properties:
           targetUserId:
-            type: string
+            type: number
             description: ID of the user to start conversation with
           initialMessage:
             type: object
@@ -136,7 +136,7 @@ components:
                 type: string
                 enum: [ text ]
                 description: Type of message
-              content:
+              textContent:
                 type: string
                 description: Content of the initial message
               timestamp:
@@ -156,13 +156,13 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           type:
             type: string
             enum: [ text ]
             description: Type of message
-          content:
+          textContent:
             type: string
             description: Content of the message
           timestamp:
@@ -171,7 +171,6 @@ components:
         required:
           - conversationId
           - type
-          - content
           - timestamp
 
     MessageReceived:
@@ -182,37 +181,11 @@ components:
       payload:
         type: object
         properties:
-          messageId:
-            type: string
-            description: Unique message identifier
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
-          senderId:
-            type: string
-            description: ID of the sender
-          senderUsername:
-            type: string
-            description: Username of the sender
-          type:
-            type: string
-            enum: [ text ]
-            description: Type of message
-          content:
-            type: string
-            description: Content of the message
-          timestamp:
-            type: string
-            format: date-time
-            description: Time when message was sent
-        required:
-          - messageId
-          - conversationId
-          - senderId
-          - senderUsername
-          - type
-          - content
-          - timestamp
+          message:
+            $ref: 'commons.yml#/components/schemas/Message'
 
     TypingIndicator:
       name: TypingIndicator
@@ -223,14 +196,11 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
-          userId:
-            type: string
-            description: ID of the user who is typing
-          username:
-            type: string
-            description: Username of the user who is typing
+          memberId:
+            type: number
+            description: ID of the member who's typing
           isTyping:
             type: boolean
             description: Whether the user is typing or stopped typing
@@ -239,7 +209,7 @@ components:
             format: date-time
         required:
           - conversationId
-          - userId
+          - memberId
           - isTyping
           - timestamp
 
@@ -253,7 +223,7 @@ components:
         properties:
           status:
             type: string
-            enum: [ online, offline, away, do_not_disturb ]
+            enum: [ online, offline, away, dnd ]
             description: New status of the user
         required:
           - status
@@ -266,12 +236,8 @@ components:
       payload:
         type: object
         properties:
-          userId:
-            type: string
-            description: ID of the user
-          username:
-            type: string
-            description: Username of the user
+          user:
+            $ref: 'commons.yml#/components/schemas/User'
           status:
             type: string
             enum: [ online, offline, away, do_not_disturb ]
@@ -281,7 +247,7 @@ components:
             format: date-time
             description: Time when user was last seen (only for offline status)
         required:
-          - userId
+          - user
           - username
           - status
 
@@ -294,7 +260,7 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the new conversation
           type:
             type: string
@@ -304,23 +270,13 @@ components:
             type: string
             description: Name of the group (only for group conversations)
           createdBy:
-            type: object
-            properties:
-              userId:
-                type: string
-              username:
-                type: string
+            $ref: 'commons.yml#/components/schemas/User'
             description: User who created the conversation
-          participants:
+          members:
             type: array
             items:
-              type: object
-              properties:
-                userId:
-                  type: string
-                username:
-                  type: string
-            description: List of participants in the conversation
+              $ref: 'commons.yml#/components/schemas/Member'
+            description: List of members in the conversation
           timestamp:
             type: string
             format: date-time
@@ -329,7 +285,7 @@ components:
           - conversationId
           - type
           - createdBy
-          - participants
+          - members
           - timestamp
 
     ConversationUpdated:
@@ -341,7 +297,7 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           name:
             type: string
@@ -350,12 +306,7 @@ components:
             type: string
             description: New description of the group
           updatedBy:
-            type: object
-            properties:
-              userId:
-                type: string
-              username:
-                type: string
+            $ref: 'commons.yml#/components/schemas/User'
             description: User who updated the conversation
           timestamp:
             type: string
@@ -375,27 +326,19 @@ components:
         type: object
         properties:
           conversationId:
-            type: string
+            type: number
             description: ID of the conversation
           type:
             type: string
             enum: [ added, removed ]
             description: Type of membership change
-          user:
-            type: object
-            properties:
-              userId:
-                type: string
-              username:
-                type: string
-            description: User who was added or removed
+          users:
+            type: array
+            items:
+              $ref: 'commons.yml#/components/schemas/User'
+            description: List of Users who were added or removed
           changedBy:
-            type: object
-            properties:
-              userId:
-                type: string
-              username:
-                type: string
+            $ref: 'commons.yml#/components/schemas/User'
             description: User who made the change (null if user left voluntarily)
           timestamp:
             type: string
@@ -404,7 +347,7 @@ components:
         required:
           - conversationId
           - type
-          - user
+          - users
           - timestamp
 
     UserNotification:
@@ -416,7 +359,7 @@ components:
         type: object
         properties:
           id:
-            type: string
+            type: number
             description: Unique notification ID
           type:
             type: string
@@ -432,7 +375,7 @@ components:
             type: object
             properties:
               id:
-                type: string
+                type: number
               type:
                 type: string
                 enum: [ user, conversation, system ]
@@ -443,13 +386,6 @@ components:
             type: string
             format: date-time
             description: Time when notification was created
-          read:
-            type: boolean
-            default: false
-            description: Whether notification has been read
-          actionUrl:
-            type: string
-            description: URL to navigate to when notification is clicked
         required:
           - id
           - type
