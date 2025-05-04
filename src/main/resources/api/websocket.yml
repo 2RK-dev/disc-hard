@@ -23,7 +23,7 @@ channels:
       summary: Send a new message to an existing conversation
       operationId: sendMessage
       message:
-        $ref: '#/components/messages/NewMessage'
+        $ref: '#/components/messages/SendMessage'
 
   /app/conversations/new:
     publish:
@@ -147,7 +147,7 @@ components:
           - targetUserId
           - initialMessage
 
-    NewMessage:
+    SendMessage:
       name: NewMessage
       title: New Message
       summary: A new message to be sent
