@@ -63,7 +63,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileUpdateResponse'
         400:
-          description: Invalid username
+          description: Invalid name
 
   /password:
     put:
@@ -205,11 +205,11 @@ paths:
       description: List all the registered users
       parameters:
         - in: query
-          name: usernameFilter
+          name: nameFilter
           required: false
           schema:
             type: string
-          description: Username search criteria
+          description: Name search criteria
         - in: query
           name: emailFilter
           required: false
@@ -431,25 +431,28 @@ components:
     PasswordChangeRequest:
       type: object
       properties:
-        oldPassword:
+        old:
           type: string
-        newPassword:
+          description: The old password
+        new:
           type: string
-        confirmNewPassword:
+          description: The new password
+        confirm:
           type: string
+          description: Confirmation of the new password
 
     ProfileUpdateResponse:
       type: object
       properties:
         email:
           type: string
-        username:
+        name:
           type: string
 
     ProfileUpdateRequest:
       type: object
       properties:
-        username:
+        name:
           type: string
 
     LoginResponse:
@@ -475,9 +478,9 @@ components:
           type: string
         password:
           type: string
-        passwordConfirmation:
+        passwordConfirm:
           type: string
-        username:
+        name:
           type: string
 
   securitySchemes:

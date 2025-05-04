@@ -248,7 +248,6 @@ components:
             description: Time when user was last seen (only for offline status)
         required:
           - user
-          - username
           - status
 
     ConversationCreated:
