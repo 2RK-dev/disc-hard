@@ -50,7 +50,7 @@ or :
 ```
 and :
 ```bash
-   cd dischard/
+   cd disc-hard/
 ```
 
 2. Configure your environment variables in the `.env` file located in the `src/main/resources/` directory.
