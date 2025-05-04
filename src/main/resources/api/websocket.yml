@@ -30,7 +30,7 @@ channels:
       summary: Start a new conversation with a user
       operationId: startNewConversation
       message:
-        $ref: '#/components/messages/StartConversationRequest'
+        $ref: '#/components/messages/StartConversation'
 
   /topic/conversations/{conversationId}:
     parameters:
@@ -42,14 +42,14 @@ channels:
       summary: Receive new messages in a specific conversation
       operationId: receiveConversationMessages
       message:
-        $ref: '#/components/messages/MessageReceived'
+        $ref: '#/components/messages/ReceivedMessage'
 
   /user/queue/messages:
     subscribe:
       summary: Receive messages directed to the current user
       operationId: receiveUserMessages
       message:
-        $ref: '#/components/messages/MessageReceived'
+        $ref: '#/components/messages/ReceivedMessage'
 
   /app/typing:
     publish:
@@ -75,7 +75,7 @@ channels:
       summary: Update current user's status
       operationId: updateUserStatus
       message:
-        $ref: '#/components/messages/UserStatus'
+        $ref: '#/components/messages/UpdateUserStatus'
 
   /topic/users/status:
     subscribe:
@@ -118,8 +118,8 @@ components:
           - token
 
 
-    StartConversationRequest:
-      name: StartConversationRequest
+    StartConversation:
+      name: StartConversation
       title: Start New Conversation Request
       summary: Request to start a new conversation with a user
       contentType: application/json
@@ -148,7 +148,7 @@ components:
           - initialMessage
 
     SendMessage:
-      name: NewMessage
+      name: SendMessage
       title: New Message
       summary: A new message to be sent
       contentType: application/json
@@ -173,8 +173,8 @@ components:
           - type
           - timestamp
 
-    MessageReceived:
-      name: MessageReceived
+    ReceivedMessage:
+      name: ReceivedMessage
       title: Message Received
       summary: A message received from the server
       contentType: application/json
@@ -213,8 +213,8 @@ components:
           - isTyping
           - timestamp
 
-    UserStatus:
-      name: UserStatus
+    UpdateUserStatus:
+      name: UpdateUserStatus
       title: User Status Update Request
       summary: Request to update the user's status
       contentType: application/json
@@ -242,10 +242,6 @@ components:
             type: string
             enum: [ online, offline, away, do_not_disturb ]
             description: Current status of the user
-          lastSeen:
-            type: string
-            format: date-time
-            description: Time when user was last seen (only for offline status)
         required:
           - user
           - status
