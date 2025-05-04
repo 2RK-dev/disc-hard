@@ -143,7 +143,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupMembersResponse'
+                $ref: '#/components/schemas/MemberListResponse'
         400:
           description: The conversation is not a group chat, can't invite any more member
         403:
@@ -328,11 +328,12 @@ components:
       type: array
       items:
         $ref: 'commons.yml#/components/schemas/Member'
+        description: Array of Users, members of the DM or group
 
     GroupInfoResponse:
       type: object
       properties:
-        conversationId:
+        id:
           type: number
           description: ID of the conversation represented by the group
         type:
@@ -347,15 +348,6 @@ components:
           type: string
           format: date-time
           description: time of creation of the group
-
-    GroupMembersResponse:
-      type: object
-      properties:
-        members:
-          type: array
-          items:
-            $ref: 'commons.yml#/components/schemas/Member'
-          description: Array of Users, members of the group
 
     MessagePagedResponse:
       type: object
@@ -389,9 +381,19 @@ components:
               textPreview:
                 type: string
                 description: Preview of the last message content
-              senderUsername:
-                type: string
-              sentAt:
+              author:
+                type: object
+                description: Info about the Member author of the message
+                properties:
+                  id:
+                    type: number
+                    description: Unique identifier of the Member
+                  alias:
+                    type: string
+                  role:
+                    type: string
+                    description: Role of the Member in the conversation
+              timestamp:
                 type: string
                 format: date-time
             description: Preview of the last message in the conversation
