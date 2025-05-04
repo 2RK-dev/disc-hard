@@ -54,14 +54,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProfileModificationRequest'
+              $ref: '#/components/schemas/ProfileUpdateRequest'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProfileModificationResponse'
+                $ref: '#/components/schemas/ProfileUpdateResponse'
         400:
           description: Invalid username
 
@@ -362,41 +362,41 @@ components:
     ConversationListResponse:
       type: array
       items:
-        type: object
-        properties:
-          id:
-            type: number
-          type:
-            type: string
-            description: group or private message
-          groupName:
-            type: string
-            description: name of the group chat if that's the type of the conversation
-          contactUsername:
-            type: string
-            description: name of the contact if the conversation is a private message
-          lastMessage:
-            type: object
-            properties:
-              textPreview:
-                type: string
-                description: Preview of the last message content
-              author:
-                type: object
-                description: Info about the Member author of the message
-                properties:
-                  id:
-                    type: number
-                    description: Unique identifier of the Member
-                  alias:
-                    type: string
-                  role:
-                    type: string
-                    description: Role of the Member in the conversation
-              timestamp:
-                type: string
-                format: date-time
-            description: Preview of the last message in the conversation
+        oneOf:
+          - $ref: '#/components/schemas/PrivateConversation'
+          - $ref: '#/components/schemas/GroupConversation'
+        discriminator:
+          propertyName: type
+          mapping:
+            private: '#/components/schemas/PrivateConversation'
+            group: '#/components/schemas/GroupConversation'
+
+    ConversationBase:
+      type: object
+      properties:
+        id:
+          type: number
+        type:
+          type: string
+      required: [ id, type ]
+
+    PrivateConversation:
+      allOf:
+        - $ref: '#/components/schemas/ConversationBase'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [ private ]
+            contact:
+              $ref: 'commons.yml#/components/schemas/Member'
+              description: The other member of the private conversation
+          required: [ type ]
+
+    GroupConversation:
+      allOf:
+        - $ref: '#/components/schemas/ConversationBase'
+        - $ref: '#/components/schemas/GroupInfoResponse'
 
     UserListResponse:
       type: array
@@ -438,7 +438,7 @@ components:
         confirmNewPassword:
           type: string
 
-    ProfileModificationResponse:
+    ProfileUpdateResponse:
       type: object
       properties:
         email:
@@ -446,7 +446,7 @@ components:
         username:
           type: string
 
-    ProfileModificationRequest:
+    ProfileUpdateRequest:
       type: object
       properties:
         username:
