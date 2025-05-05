@@ -101,7 +101,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupInfoResponse'
+                $ref: '#/components/schemas/GroupInfo'
         404:
           description: One or more of the group's would-be members do not exist
 
@@ -122,35 +122,8 @@ paths:
           description: Left successfully
         400:
           description: The conversation is not a group chat, you can't leave
-        404:
-          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
 
   /groups/{groupId}/members:
-    get:
-      description: Get the members of a group chat
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - in: path
-          name: groupId
-          required: true
-          description: The ID of the group to invite an user to
-          schema:
-            type: string
-      responses:
-        200:
-          description: The list of group members
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MemberListResponse'
-        400:
-          description: The conversation is not a group chat, can't invite any more member
-        403:
-          description: The user is not a member of the requested group
-        404:
-          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
-
     post:
       description: Invite a user to a group
       security:
@@ -196,7 +169,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupInfoResponse'
+                $ref: '#/components/schemas/GroupDataResponse'
+        400:
+          description: The conversation is not a group chat
+        403:
+          description: Not a member of the group
         404:
           description: The group does not exist
 
@@ -316,7 +293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MemberListResponse'
+                $ref: '#/components/schemas/MemberList'
         403:
           description: the user is not allowed to view the requested conversation
         404:
@@ -324,13 +301,13 @@ paths:
 
 components:
   schemas:
-    MemberListResponse:
+    MemberList:
       type: array
       items:
         $ref: 'commons.yml#/components/schemas/Member'
         description: Array of Users, members of the DM or group
 
-    GroupInfoResponse:
+    GroupInfo:
       type: object
       properties:
         id:
@@ -348,6 +325,16 @@ components:
           type: string
           format: date-time
           description: time of creation of the group
+
+    GroupDataResponse:
+      type: object
+      properties:
+        info:
+          description: Informations about the group
+          $ref: "#/components/schemas/GroupInfo"
+        members:
+          description: List of the members of the group
+          $ref: "#/components/schemas/MemberList"
 
     MessagePagedResponse:
       type: object
@@ -396,7 +383,7 @@ components:
     GroupConversation:
       allOf:
         - $ref: '#/components/schemas/ConversationBase'
-        - $ref: '#/components/schemas/GroupInfoResponse'
+        - $ref: '#/components/schemas/GroupInfo'
 
     UserListResponse:
       type: array
