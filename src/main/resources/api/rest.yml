@@ -54,16 +54,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProfileModificationRequest'
+              $ref: '#/components/schemas/ProfileUpdateRequest'
       responses:
         200:
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProfileModificationResponse'
+                $ref: '#/components/schemas/ProfileUpdateResponse'
         400:
-          description: Invalid username
+          description: Invalid name
 
   /password:
     put:
@@ -101,7 +101,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupInfoResponse'
+                $ref: '#/components/schemas/GroupInfo'
         404:
           description: One or more of the group's would-be members do not exist
 
@@ -122,35 +122,8 @@ paths:
           description: Left successfully
         400:
           description: The conversation is not a group chat, you can't leave
-        404:
-          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
 
   /groups/{groupId}/members:
-    get:
-      description: Get the members of a group chat
-      security:
-        - bearerAuth: [ ]
-      parameters:
-        - in: path
-          name: groupId
-          required: true
-          description: The ID of the group to invite an user to
-          schema:
-            type: string
-      responses:
-        200:
-          description: The list of group members
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupMembersResponse'
-        400:
-          description: The conversation is not a group chat, can't invite any more member
-        403:
-          description: The user is not a member of the requested group
-        404:
-          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
-
     post:
       description: Invite a user to a group
       security:
@@ -196,7 +169,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupInfoResponse'
+                $ref: '#/components/schemas/GroupDataResponse'
+        400:
+          description: The conversation is not a group chat
+        403:
+          description: Not a member of the group
         404:
           description: The group does not exist
 
@@ -205,11 +182,11 @@ paths:
       description: List all the registered users
       parameters:
         - in: query
-          name: usernameFilter
+          name: nameFilter
           required: false
           schema:
             type: string
-          description: Username search criteria
+          description: Name search criteria
         - in: query
           name: emailFilter
           required: false
@@ -316,7 +293,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MemberListResponse'
+                $ref: '#/components/schemas/MemberList'
         403:
           description: the user is not allowed to view the requested conversation
         404:
@@ -324,15 +301,16 @@ paths:
 
 components:
   schemas:
-    MemberListResponse:
+    MemberList:
       type: array
       items:
         $ref: 'commons.yml#/components/schemas/Member'
+        description: Array of Users, members of the DM or group
 
-    GroupInfoResponse:
+    GroupInfo:
       type: object
       properties:
-        conversationId:
+        id:
           type: number
           description: ID of the conversation represented by the group
         type:
@@ -348,14 +326,15 @@ components:
           format: date-time
           description: time of creation of the group
 
-    GroupMembersResponse:
+    GroupDataResponse:
       type: object
       properties:
+        info:
+          description: Informations about the group
+          $ref: "#/components/schemas/GroupInfo"
         members:
-          type: array
-          items:
-            $ref: 'commons.yml#/components/schemas/Member'
-          description: Array of Users, members of the group
+          description: List of the members of the group
+          $ref: "#/components/schemas/MemberList"
 
     MessagePagedResponse:
       type: object
@@ -370,31 +349,41 @@ components:
     ConversationListResponse:
       type: array
       items:
-        type: object
-        properties:
-          id:
-            type: number
-          type:
-            type: string
-            description: group or private message
-          groupName:
-            type: string
-            description: name of the group chat if that's the type of the conversation
-          contactUsername:
-            type: string
-            description: name of the contact if the conversation is a private message
-          lastMessage:
-            type: object
-            properties:
-              textPreview:
-                type: string
-                description: Preview of the last message content
-              senderUsername:
-                type: string
-              sentAt:
-                type: string
-                format: date-time
-            description: Preview of the last message in the conversation
+        oneOf:
+          - $ref: '#/components/schemas/PrivateConversation'
+          - $ref: '#/components/schemas/GroupConversation'
+        discriminator:
+          propertyName: type
+          mapping:
+            private: '#/components/schemas/PrivateConversation'
+            group: '#/components/schemas/GroupConversation'
+
+    ConversationBase:
+      type: object
+      properties:
+        id:
+          type: number
+        type:
+          type: string
+      required: [ id, type ]
+
+    PrivateConversation:
+      allOf:
+        - $ref: '#/components/schemas/ConversationBase'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [ private ]
+            contact:
+              $ref: 'commons.yml#/components/schemas/Member'
+              description: The other member of the private conversation
+          required: [ type ]
+
+    GroupConversation:
+      allOf:
+        - $ref: '#/components/schemas/ConversationBase'
+        - $ref: '#/components/schemas/GroupInfo'
 
     UserListResponse:
       type: array
@@ -429,25 +418,28 @@ components:
     PasswordChangeRequest:
       type: object
       properties:
-        oldPassword:
+        old:
           type: string
-        newPassword:
+          description: The old password
+        new:
           type: string
-        confirmNewPassword:
+          description: The new password
+        confirm:
           type: string
+          description: Confirmation of the new password
 
-    ProfileModificationResponse:
+    ProfileUpdateResponse:
       type: object
       properties:
         email:
           type: string
-        username:
+        name:
           type: string
 
-    ProfileModificationRequest:
+    ProfileUpdateRequest:
       type: object
       properties:
-        username:
+        name:
           type: string
 
     LoginResponse:
@@ -473,9 +465,9 @@ components:
           type: string
         password:
           type: string
-        passwordConfirmation:
+        passwordConfirm:
           type: string
-        username:
+        name:
           type: string
 
   securitySchemes:
