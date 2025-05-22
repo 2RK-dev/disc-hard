@@ -253,9 +253,9 @@ components:
           name:
             type: string
             description: Name of the group (only for group conversations)
-          createdBy:
-            $ref: 'commons.yml#/components/schemas/Member'
-            description: Member who created the conversation
+          createdByMemberId:
+            type: number
+            description: ID of the member who created the conversation
           members:
             type: array
             items:
@@ -291,9 +291,9 @@ components:
           description:
             type: string
             description: New description of the group
-          updatedBy:
-            $ref: 'commons.yml#/components/schemas/Member'
-            description: Member who updated the conversation
+          updatedByMemberId:
+            type: number
+            description: ID of the member who updated the conversation
           timestamp:
             type: string
             format: date-time
