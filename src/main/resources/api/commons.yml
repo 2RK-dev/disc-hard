@@ -34,7 +34,7 @@ components:
           description: The URI of the avatar image of the user
         status:
           type: string
-          description: The user's active status (online, idle, dnd, offline)
+          description: The user's active status (online, idle, do_not_disturb, offline)
 
     Message:
       type: object

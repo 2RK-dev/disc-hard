@@ -9,6 +9,8 @@ servers:
     url: ws://localhost:8080/ws
     protocol: ws
     description: DiscHard WebSocket server with STOMP support
+    security:
+      - bearerAuth: [ ]
 
 channels:
   /app/messages:
@@ -30,7 +32,7 @@ channels:
       conversationId:
         description: ID of the conversation
         schema:
-          type: string
+          type: number
     subscribe:
       summary: Receive new messages in a specific conversation
       operationId: receiveConversationMessages
@@ -46,7 +48,7 @@ channels:
 
   /app/typing:
     publish:
-      summary: Send typing indicator
+      summary: Send a typing indicator for a conversation
       operationId: sendTypingIndicator
       message:
         $ref: '#/components/messages/TypingIndicator'
@@ -56,7 +58,7 @@ channels:
       conversationId:
         description: ID of the conversation
         schema:
-          type: string
+          type: number
     subscribe:
       summary: Receive typing indicators for a specific conversation
       operationId: receiveTypingIndicators
@@ -88,13 +90,9 @@ channels:
           oneOf:
             - $ref: '#/components/messages/ConversationCreated/payload'
             - $ref: '#/components/messages/ConversationUpdated/payload'
-            - $ref: '#/components/messages/MembershipChanged/payload'
-          discriminator:
-            propertyName: eventType
-            mapping:
-              conversation_created: '#/components/messages/ConversationCreated/payload'
-              conversation_updated: '#/components/messages/ConversationUpdated/payload'
-              membership_changed: '#/components/messages/MembershipChanged/payload'
+            - $ref: '#/components/messages/MembersAdded/payload'
+            - $ref: '#/components/messages/MembersRemoved/payload'
+          discriminator: 'eventType'
 
   /user/queue/notifications:
     subscribe:
@@ -105,21 +103,6 @@ channels:
 
 components:
   messages:
-    ConnectionRequest:
-      name: ConnectionRequest
-      title: WebSocket Connection Request
-      summary: Authentication request for WebSocket connection
-      contentType: application/json
-      payload:
-        type: object
-        properties:
-          token:
-            type: string
-            description: JWT token for authentication
-        required:
-          - token
-
-
     StartConversation:
       name: StartConversation
       title: Start New Conversation Request
@@ -225,7 +208,7 @@ components:
         properties:
           status:
             type: string
-            enum: [ online, offline, away, dnd ]
+            enum: [ online, offline, away, do_not_disturb ]
             description: New status of the user
         required:
           - status
@@ -271,8 +254,8 @@ components:
             type: string
             description: Name of the group (only for group conversations)
           createdBy:
-            $ref: 'commons.yml#/components/schemas/User'
-            description: User who created the conversation
+            $ref: 'commons.yml#/components/schemas/Member'
+            description: Member who created the conversation
           members:
             type: array
             items:
@@ -285,9 +268,6 @@ components:
         required:
           - eventType
           - conversationId
-          - type
-          - createdBy
-          - members
           - timestamp
 
     ConversationUpdated:
@@ -312,8 +292,8 @@ components:
             type: string
             description: New description of the group
           updatedBy:
-            $ref: 'commons.yml#/components/schemas/User'
-            description: User who updated the conversation
+            $ref: 'commons.yml#/components/schemas/Member'
+            description: Member who updated the conversation
           timestamp:
             type: string
             format: date-time
@@ -321,45 +301,6 @@ components:
         required:
           - eventType
           - conversationId
-          - updatedBy
-          - timestamp
-
-    MembershipChanged:
-      name: MembershipChanged
-      title: Conversation Membership Changed
-      summary: Members of a conversation have changed
-      contentType: application/json
-      payload:
-        type: object
-        properties:
-          eventType:
-            type: string
-            enum: [ membership_changed ]
-            description: Type of event for discrimination
-          conversationId:
-            type: number
-            description: ID of the conversation
-          changeType:
-            type: string
-            enum: [ added, removed ]
-            description: Type of membership change
-          users:
-            type: array
-            items:
-              $ref: 'commons.yml#/components/schemas/User'
-            description: List of Users who were added or removed
-          changedBy:
-            $ref: 'commons.yml#/components/schemas/User'
-            description: User who made the change (null if user left voluntarily)
-          timestamp:
-            type: string
-            format: date-time
-            description: Time when membership changed
-        required:
-          - eventType
-          - conversationId
-          - changeType
-          - users
           - timestamp
 
     UserNotification:
@@ -402,6 +343,70 @@ components:
           - id
           - type
           - content
+          - timestamp
+
+    MembersAdded:
+      name: MembersAdded
+      title: Members Added to Conversation
+      summary: New members added to a conversation
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventType:
+            type: string
+            enum: [ members_added ]
+            description: Type of event for discrimination
+          conversationId:
+            type: number
+            description: ID of the conversation
+          members:
+            type: array
+            items:
+              $ref: 'commons.yml#/components/schemas/Member'
+            description: List of complete Member objects that were added
+          addedByMemberId:
+            type: number
+            description: ID of the member who added the new members
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when members were added
+        required:
+          - eventType
+          - conversationId
+          - timestamp
+
+    MembersRemoved:
+      name: MembersRemoved
+      title: Members Removed from Conversation
+      summary: Members removed from a conversation
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventType:
+            type: string
+            enum: [ members_removed ]
+            description: Type of event for discrimination
+          conversationId:
+            type: number
+            description: ID of the conversation
+          memberIds:
+            type: array
+            items:
+              type: number
+            description: List of member IDs that were removed
+          removedByMemberId:
+            type: number
+            description: ID of the member who removed the members (null if member left voluntarily)
+          timestamp:
+            type: string
+            format: date-time
+            description: Time when members were removed
+        required:
+          - eventType
+          - conversationId
           - timestamp
 
   securitySchemes:
