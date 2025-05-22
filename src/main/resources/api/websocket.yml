@@ -11,13 +11,6 @@ servers:
     description: DiscHard WebSocket server with STOMP support
 
 channels:
-  /app/connect:
-    publish:
-      summary: Connect and authenticate to the WebSocket server
-      operationId: connectWebSocket
-      message:
-        $ref: '#/components/messages/ConnectionRequest'
-
   /app/messages:
     publish:
       summary: Send a new message to an existing conversation
@@ -89,10 +82,19 @@ channels:
       summary: Receive updates about conversations (new, modified, members)
       operationId: receiveConversationsUpdates
       message:
-        oneOf:
-          - $ref: '#/components/messages/ConversationCreated'
-          - $ref: '#/components/messages/ConversationUpdated'
-          - $ref: '#/components/messages/MembershipChanged'
+        name: ConversationEvent
+        contentType: application/json
+        payload:
+          oneOf:
+            - $ref: '#/components/messages/ConversationCreated/payload'
+            - $ref: '#/components/messages/ConversationUpdated/payload'
+            - $ref: '#/components/messages/MembershipChanged/payload'
+          discriminator:
+            propertyName: eventType
+            mapping:
+              conversation_created: '#/components/messages/ConversationCreated/payload'
+              conversation_updated: '#/components/messages/ConversationUpdated/payload'
+              membership_changed: '#/components/messages/MembershipChanged/payload'
 
   /user/queue/notifications:
     subscribe:
@@ -254,6 +256,10 @@ components:
       payload:
         type: object
         properties:
+          eventType:
+            type: string
+            enum: [ conversation_created ]
+            description: Type of event for discrimination
           conversationId:
             type: number
             description: ID of the new conversation
@@ -277,6 +283,7 @@ components:
             format: date-time
             description: Time when conversation was created
         required:
+          - eventType
           - conversationId
           - type
           - createdBy
@@ -291,6 +298,10 @@ components:
       payload:
         type: object
         properties:
+          eventType:
+            type: string
+            enum: [ conversation_updated ]
+            description: Type of event for discrimination
           conversationId:
             type: number
             description: ID of the conversation
@@ -308,6 +319,7 @@ components:
             format: date-time
             description: Time when conversation was updated
         required:
+          - eventType
           - conversationId
           - updatedBy
           - timestamp
@@ -320,10 +332,14 @@ components:
       payload:
         type: object
         properties:
+          eventType:
+            type: string
+            enum: [ membership_changed ]
+            description: Type of event for discrimination
           conversationId:
             type: number
             description: ID of the conversation
-          type:
+          changeType:
             type: string
             enum: [ added, removed ]
             description: Type of membership change
@@ -340,8 +356,9 @@ components:
             format: date-time
             description: Time when membership changed
         required:
+          - eventType
           - conversationId
-          - type
+          - changeType
           - users
           - timestamp
 
