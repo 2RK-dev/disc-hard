@@ -399,6 +399,7 @@ components:
             description: List of member IDs that were removed
           removedByMemberId:
             type: number
+            nullable: true
             description: ID of the member who removed the members (null if member left voluntarily)
           timestamp:
             type: string
