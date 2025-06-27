@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     @PostMapping("/register")
-    public ResponseEntity<Void> registerUser(@RequestBody RegistrationRequest request) {
+    public ResponseEntity<Void> registerUser(@Valid @RequestBody RegistrationRequest request) {
         throw new UnsupportedOperationException();
     }
 

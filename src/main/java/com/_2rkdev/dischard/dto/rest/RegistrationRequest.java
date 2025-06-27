@@ -1,6 +1,6 @@
 package com._2rkdev.dischard.dto.rest;
 
-public record RegistrationRequest(
+public record RegistrationRequestDTO(
         String email,
         String password,
         String passwordConfirm,

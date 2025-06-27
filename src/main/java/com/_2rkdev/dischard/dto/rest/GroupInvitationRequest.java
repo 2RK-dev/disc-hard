@@ -2,7 +2,7 @@ package com._2rkdev.dischard.dto.rest;
 
 import java.util.List;
 
-public record GroupInvitationRequest(
+public record GroupInvitationRequestDTO(
         List<String> userIds
 ) {
 }

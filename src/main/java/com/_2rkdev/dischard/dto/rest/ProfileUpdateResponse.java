@@ -1,6 +1,6 @@
 package com._2rkdev.dischard.dto.rest;
 
-public record ProfileUpdateResponse(
+public record ProfileUpdateResponseDTO(
         String email,
         String name
 ) {

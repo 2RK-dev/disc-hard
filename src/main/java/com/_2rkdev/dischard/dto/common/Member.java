@@ -1,6 +1,6 @@
 package com._2rkdev.dischard.dto.common;
 
-public record Member(
+public record MemberDTO(
         Long id,
         String alias,
         User user,

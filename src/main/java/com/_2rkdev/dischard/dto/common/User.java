@@ -2,7 +2,7 @@ package com._2rkdev.dischard.dto.common;
 
 import java.time.LocalDateTime;
 
-public record User(
+public record UserDTO(
         Long id,
         String name,
         String email,

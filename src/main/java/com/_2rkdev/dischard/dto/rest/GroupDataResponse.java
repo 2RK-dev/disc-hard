@@ -4,7 +4,7 @@ import com._2rkdev.dischard.dto.common.Member;
 
 import java.util.List;
 
-public record GroupDataResponse(
+public record GroupDataResponseDTO(
         GroupInfo info,
         List<Member> members
 ) {
