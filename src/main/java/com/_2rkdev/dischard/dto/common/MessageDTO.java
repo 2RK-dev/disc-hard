@@ -7,6 +7,6 @@ public record MessageDTO(
         String type,
         String textContent,
         LocalDateTime timestamp,
-        Member author
+        MemberDTO author
 ) {
 }

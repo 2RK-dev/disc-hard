@@ -1,9 +1,10 @@
 package com._2rkdev.dischard.controller;
 
-import com._2rkdev.dischard.dto.rest.CreateGroupRequest;
-import com._2rkdev.dischard.dto.rest.GroupDataResponse;
-import com._2rkdev.dischard.dto.rest.GroupInfo;
-import com._2rkdev.dischard.dto.rest.GroupInvitationRequest;
+import com._2rkdev.dischard.dto.rest.CreateGroupRequestDTO;
+import com._2rkdev.dischard.dto.rest.GroupDataResponseDTO;
+import com._2rkdev.dischard.dto.rest.GroupInfoDTO;
+import com._2rkdev.dischard.dto.rest.GroupInvitationRequestDTO;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class GroupController {
 
     @PostMapping
-    public ResponseEntity<GroupInfo> createGroup(@RequestBody CreateGroupRequest request) {
+    public ResponseEntity<GroupInfoDTO> createGroup(@Valid @RequestBody CreateGroupRequestDTO request) {
         throw new UnsupportedOperationException();
     }
 
@@ -24,12 +25,12 @@ public class GroupController {
     @PostMapping("/{groupId}/members")
     public ResponseEntity<Void> inviteToGroup(
             @PathVariable String groupId,
-            @RequestBody GroupInvitationRequest request) {
+            @Valid @RequestBody GroupInvitationRequestDTO request) {
         throw new UnsupportedOperationException();
     }
 
     @GetMapping("/{groupId}")
-    public ResponseEntity<GroupDataResponse> getGroupInfo(@PathVariable String groupId) {
+    public ResponseEntity<GroupDataResponseDTO> getGroupInfo(@PathVariable String groupId) {
         throw new UnsupportedOperationException();
     }
 }

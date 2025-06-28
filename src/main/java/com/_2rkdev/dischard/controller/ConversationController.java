@@ -1,7 +1,7 @@
 package com._2rkdev.dischard.controller;
 
-import com._2rkdev.dischard.dto.common.Member;
-import com._2rkdev.dischard.dto.rest.MessagePagedResponse;
+import com._2rkdev.dischard.dto.common.MemberDTO;
+import com._2rkdev.dischard.dto.rest.MessagePagedResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +18,7 @@ public class ConversationController {
     }
 
     @GetMapping("/{conversationId}/messages")
-    public ResponseEntity<MessagePagedResponse> getConversationMessages(
+    public ResponseEntity<MessagePagedResponseDTO> getConversationMessages(
             @PathVariable String conversationId,
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "20") Integer size) {
@@ -26,7 +26,7 @@ public class ConversationController {
     }
 
     @GetMapping("/{conversationId}/members")
-    public ResponseEntity<List<Member>> getConversationMembers(@PathVariable String conversationId) {
+    public ResponseEntity<List<MemberDTO>> getConversationMembers(@PathVariable String conversationId) {
         throw new UnsupportedOperationException();
     }
 }
