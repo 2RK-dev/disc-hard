@@ -72,7 +72,8 @@ APP_SECRET_KEY=your_secret_key_for_jwt
 ```bash
     ./gradlew bootRun
 ```
-or just click play button in your IDE
+
+or just click the play button in your IDE
 
 6. Access the API documentation:
 ```
