@@ -71,3 +71,31 @@ components:
         number:
           type: integer
           description: Current page number
+
+    ValidationError:
+      description: Error details
+      type: object
+      properties:
+        timestamp:
+          type: integer
+        message:
+          type: string
+        errors:
+          type:
+            object
+        errorCode:
+          type: string
+
+    ErrorDetails:
+      description: Error details
+      type: object
+      properties:
+        timestamp:
+          type: integer
+        message:
+          type: string
+        details:
+          type:
+            string
+        errorCode:
+          type: string

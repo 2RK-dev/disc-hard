@@ -1,24 +1,23 @@
 package com._2rkdev.dischard.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue
-    private UUID id;
+    private Long id;
 
     @Column(unique = true, nullable = false)
     private String email;

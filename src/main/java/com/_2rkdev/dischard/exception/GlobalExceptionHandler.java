@@ -2,8 +2,10 @@ package com._2rkdev.dischard.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +47,28 @@ public class GlobalExceptionHandler {
                 "VALIDATION_FAILED"
         );
         return new ResponseEntity<>(validationErrorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(EmailTakenException.class)
+    public ResponseEntity<ErrorDetails> handleEmailTakenException(EmailTakenException ex, WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                ex.getMessage(),
+                request.getDescription(false),
+                "EMAIL_TAKEN"
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorDetails> handleBadCredentialsException(@NotNull BadCredentialsException ex, @NotNull WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                ex.getMessage(),
+                request.getDescription(false),
+                "AUTHENTICATION_FAILED"
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)
