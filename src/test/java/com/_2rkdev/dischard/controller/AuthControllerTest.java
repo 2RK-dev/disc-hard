@@ -8,6 +8,7 @@ import com.atlassian.oai.validator.mockmvc.MockMvcRequest;
 import com.atlassian.oai.validator.mockmvc.MockMvcResponse;
 import com.atlassian.oai.validator.report.ValidationReport;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -109,12 +110,46 @@ class AuthControllerTest {
 
         @Test
         void shouldBeUnauthorized() throws Exception {
-            MvcResult loginResult = mockMvc.perform(post("/login")
+            MvcResult registerResult = mockMvc.perform(post("/register")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"email\":\"user@mail.com\",\"password\":\"password\"}")
-                    ).andExpect(status().isUnauthorized())
+                            .content("{\"email\":\"user@mail.com\",\"password\":\"password\", \"passwordConfirm\": \"password\", \"name\": \"ahaha\"}")
+                    ).andExpect(status().isOk())
                     .andReturn();
-            assertValidOpenApi(loginResult);
+            assertValidOpenApi(registerResult);
+            MvcResult loginUnregistered = mockMvc.perform(post("/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"email\":\"notuser@mail.com\",\"password\":\"password\"}")
+            ).andReturn();
+
+            MvcResult loginWithoutEmail = mockMvc.perform(post("/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"password\":\"password\"}")
+            ).andReturn();
+
+            MvcResult loginWithoutPassword = mockMvc.perform(post("/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"email\":\"notuser@mail.com\",\"password\":\"password\"}")
+            ).andReturn();
+
+            MvcResult loginWithEmptyBody = mockMvc.perform(post("/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}")
+            ).andReturn();
+
+            MvcResult loginWithoutBody = mockMvc.perform(post("/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"email\":\"notuser@mail.com\",\"password\":\"password\"}")
+            ).andReturn();
+
+            Assertions.assertAll(
+                    () -> assertThat(loginUnregistered.getResponse().getStatus()).isEqualTo(401),
+                    () -> assertValidOpenApi(loginUnregistered),
+                    () -> assertThat(loginUnregistered.getResponse().getStatus()).isEqualTo(401),
+                    () -> assertThat(loginWithoutEmail.getResponse().getStatus()).isEqualTo(401),
+                    () -> assertThat(loginWithoutPassword.getResponse().getStatus()).isEqualTo(401),
+                    () -> assertThat(loginWithEmptyBody.getResponse().getStatus()).isEqualTo(401),
+                    () -> assertThat(loginWithoutBody.getResponse().getStatus()).isEqualTo(401)
+            );
         }
     }
 }
