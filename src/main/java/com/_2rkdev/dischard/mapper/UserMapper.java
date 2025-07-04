@@ -5,6 +5,8 @@ import com._2rkdev.dischard.entity.User;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneOffset;
+
 @Component
 public class UserMapper {
     public @NotNull UserDTO toUserDTO(@NotNull User user) {
@@ -12,7 +14,7 @@ public class UserMapper {
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                user.getCreated().toLocalDateTime(),
+                user.getCreated().toLocalDateTime().atOffset(ZoneOffset.UTC),
                 user.getAvatar(),
                 user.getStatus()
         );
