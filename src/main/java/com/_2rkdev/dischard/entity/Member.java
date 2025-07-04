@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "members")
@@ -17,7 +16,7 @@ import java.util.UUID;
 public class Member {
     @Id
     @GeneratedValue
-    private UUID id;
+    private Long id;
 
     private String alias;
 

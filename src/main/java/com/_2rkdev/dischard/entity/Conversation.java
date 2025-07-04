@@ -8,7 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "conversations")
@@ -19,7 +18,7 @@ import java.util.UUID;
 public class Conversation {
     @Id
     @GeneratedValue
-    private UUID id;
+    private Long id;
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(

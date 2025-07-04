@@ -1,12 +1,8 @@
 package com._2rkdev.dischard.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "messages")
@@ -15,7 +11,7 @@ import java.util.UUID;
 public class Message {
     @Id
     @GeneratedValue
-    private UUID id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "conversation_id", nullable = false)
