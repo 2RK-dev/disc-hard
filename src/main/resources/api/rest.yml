@@ -80,6 +80,10 @@ paths:
                 $ref: '#/components/schemas/ProfileUpdateResponse'
         400:
           description: Invalid name
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ValidationError'
 
   /password:
     put:
@@ -97,8 +101,16 @@ paths:
           description: Success
         400:
           description: New password and its confirmation differ
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ValidationError'
         401:
           description: Old password is incorrect
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
 
   /groups:
     post:
@@ -226,7 +238,7 @@ paths:
           description: ID of the user
           required: true
           schema:
-            type: string
+            type: number
       responses:
         200:
           description: The informations about the requested user
@@ -236,6 +248,10 @@ paths:
                 $ref: 'commons.yml#/components/schemas/User'
         404:
           description: The user with the provided ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
 
   /conversations:
     get:
