@@ -2,6 +2,7 @@ package com._2rkdev.dischard.service;
 
 import com._2rkdev.dischard.dto.rest.LoginRequestDTO;
 import com._2rkdev.dischard.dto.rest.LoginResponseDTO;
+import com._2rkdev.dischard.dto.rest.PasswordChangeRequestDTO;
 import com._2rkdev.dischard.dto.rest.RegistrationRequestDTO;
 import com._2rkdev.dischard.entity.User;
 import com._2rkdev.dischard.exception.EmailTakenException;
@@ -55,5 +56,14 @@ public class AuthService {
         String token = jwtService.generateToken((UserDetails) authentication.getPrincipal());
         User user = userRepository.findByEmail(request.email()).orElseThrow(() -> new BadCredentialsException("Bad credentials"));
         return new LoginResponseDTO(token, userMapper.toUserDTO(user));
+    }
+
+    public void changePassword(@NotNull String email, @NotNull PasswordChangeRequestDTO request) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new BadCredentialsException("Bad credentials"));
+        if (!passwordEncoder.matches(request.old(), user.getPassword())) {
+            throw new BadCredentialsException("Bad credentials");
+        }
+        user.setPassword(passwordEncoder.encode(request.new_()));
+        userRepository.save(user);
     }
 }

@@ -1,15 +1,9 @@
 package com._2rkdev.dischard.controller;
 
-import com._2rkdev.dischard.config.OpenApiTestConfig;
 import com._2rkdev.dischard.entity.User;
 import com._2rkdev.dischard.repository.UserRepository;
-import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.mockmvc.MockMvcRequest;
-import com.atlassian.oai.validator.mockmvc.MockMvcResponse;
-import com.atlassian.oai.validator.report.ValidationReport;
-import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +13,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
+import static com._2rkdev.dischard.assertion.OpenApiAssertions.assertValidOpenApi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Testcontainers
 @SpringBootTest
 @TestPropertySource(properties = {
         "spring.datasource.url=jdbc:h2:mem:testdb",
@@ -34,21 +27,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @AutoConfigureMockMvc
 class AuthControllerTest {
-    private final OpenApiInteractionValidator validator = OpenApiTestConfig.openApiValidator();
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private UserRepository userRepository;
 
-    @BeforeEach
-    void setUp() {
+    @AfterEach
+    void tearDown() {
         userRepository.deleteAll();
-    }
-
-    private void assertValidOpenApi(@NotNull MvcResult mvcResult) {
-        ValidationReport report = validator.validate(MockMvcRequest.of(mvcResult.getRequest()), MockMvcResponse.of(mvcResult.getResponse()));
-        System.out.println(report);
-        assertThat(report.hasErrors()).isFalse();
     }
 
     @Nested

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.time.ZoneOffset;
+import java.util.List;
 
 @Component
 public class UserMapper {
@@ -18,5 +19,9 @@ public class UserMapper {
                 user.getAvatar(),
                 user.getStatus()
         );
+    }
+
+    public List<UserDTO> toUserDTOList(@NotNull List<User> users) {
+        return users.stream().map(this::toUserDTO).toList();
     }
 }
