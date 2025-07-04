@@ -15,7 +15,6 @@ import java.util.Objects;
 @Setter
 @ToString
 @RequiredArgsConstructor
-@NoArgsConstructor
 @AllArgsConstructor
 @DiscriminatorColumn(name = "message_type")
 public class Conversation {
