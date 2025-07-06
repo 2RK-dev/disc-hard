@@ -5,6 +5,6 @@ import java.util.List;
 public record CreateGroupRequestDTO(
         String name,
         String description,
-        List<String> members
+        List<Long> members
 ) {
 }

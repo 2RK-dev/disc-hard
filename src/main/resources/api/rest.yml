@@ -132,6 +132,10 @@ paths:
                 $ref: '#/components/schemas/GroupInfo'
         404:
           description: One or more of the group's would-be members do not exist
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
 
   /groups/{groupId}/members/me:
     delete:
@@ -148,8 +152,6 @@ paths:
       responses:
         204:
           description: Left successfully
-        400:
-          description: The conversation is not a group chat, you can't leave
 
   /groups/{groupId}/members:
     post:
@@ -172,12 +174,18 @@ paths:
       responses:
         204:
           description: Added successfully
-        400:
-          description: The conversation is not a group chat, can't invite any more member
         403:
-          description: No permission to invite members (if the group has admins)
+          description: No permission to invite members, or the user making the request is not a member of the group
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
         404:
-          description: The group with the provided ID does not exist, or the user making the request is not a member of the group
+          description: The group with the provided ID does not exist (maybe it's a DM)
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
 
   /groups/{groupId}:
     get:
@@ -198,12 +206,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupDataResponse'
-        400:
-          description: The conversation is not a group chat
         403:
           description: Not a member of the group
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
         404:
           description: The group does not exist
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
 
   /users:
     get:
@@ -453,7 +467,7 @@ components:
         userIds:
           type: array
           items:
-            type: string
+            type: number
           description: Array of user IDs to invite in the group
 
     CreateGroupRequest:
