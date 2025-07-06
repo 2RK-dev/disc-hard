@@ -46,7 +46,6 @@ class GroupControllerTest {
     @Autowired
     private ConversationRepository conversationRepository;
 
-
     @BeforeEach
     void setUp() throws Exception {
         User dmPartner = User.builder().name("Dm Partner").email("dmPartner@mail.com").password("kdjs").build();
@@ -69,6 +68,56 @@ class GroupControllerTest {
     void tearDown() {
         conversationRepository.deleteAll();
         userRepository.deleteAll();
+    }
+
+    /**
+     * Helper method to create a group and return the group ID
+     */
+    private Long createTestGroup(List<Long> members) throws Exception {
+        String membersJson = members.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(", ", "[", "]"));
+
+        MvcResult createGroup = mockMvc.perform(post("/groups")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\": \"test\", \"description\":  \"Desc\", \"members\": %s}".formatted(membersJson)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        assertValidOpenApi(createGroup);
+        int id = JsonPath.read(createGroup.getResponse().getContentAsString(), "$.id");
+        return (long) id;
+    }
+
+    /**
+     * Helper method to create a group with a default member (inGroupId)
+     */
+    private Long createTestGroup() throws Exception {
+        return createTestGroup(List.of(inGroupId));
+    }
+
+    /**
+     * Helper method to create a private conversation for testing
+     */
+    private Long createPrivateConversation() {
+        User dmPartner = userRepository.findById(dmPartnerId).orElseThrow();
+        User myUser = userRepository.findById((long) myUserId).orElseThrow();
+        PrivateConversation dm = new PrivateConversation();
+        dm.addMembers(List.of(Member.builder().user(myUser).build(), Member.builder().user(dmPartner).build()));
+        conversationRepository.save(dm);
+        return dm.getId();
+    }
+
+    /**
+     * Helper method to leave a group
+     */
+    private void leaveGroup(Long groupId) throws Exception {
+        MvcResult leaveResult = mockMvc.perform(delete("/groups/" + groupId + "/members/me")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isNoContent())
+                .andReturn();
+        assertValidOpenApi(leaveResult);
     }
 
     @Nested
@@ -111,19 +160,14 @@ class GroupControllerTest {
     class LeaveGroup {
         @Test
         void shouldBeNoContent() throws Exception {
-            MvcResult createGroup = mockMvc.perform(post("/groups")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\": \"test\", \"description\":  \"Desc\", \"members\": [%d]}".formatted(inGroupId)))
-                    .andExpect(status().isCreated())
-                    .andReturn();
-            assertValidOpenApi(createGroup);
-            int groupId = JsonPath.read(createGroup.getResponse().getContentAsString(), "$.id");
+            Long groupId = createTestGroup();
+
             MvcResult leaveAsAMember = mockMvc.perform(delete("/groups/" + groupId + "/members/me")
                             .header("Authorization", "Bearer " + accessToken))
                     .andExpect(status().isNoContent())
                     .andReturn();
             assertValidOpenApi(leaveAsAMember);
+
             MvcResult leaveAsANonMember = mockMvc.perform(delete("/groups/" + groupId + "/members/me")
                             .header("Authorization", "Bearer " + accessToken))
                     .andExpect(status().isNoContent())
@@ -136,14 +180,7 @@ class GroupControllerTest {
     class InviteToGroup {
         @Test
         void shouldBeNoContent() throws Exception {
-            MvcResult createGroup = mockMvc.perform(post("/groups")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\": \"test\", \"description\":  \"Desc\", \"members\": [%d]}".formatted(inGroupId)))
-                    .andExpect(status().isCreated())
-                    .andReturn();
-            assertValidOpenApi(createGroup);
-            int groupId = JsonPath.read(createGroup.getResponse().getContentAsString(), "$.id");
+            Long groupId = createTestGroup();
 
             MvcResult mvcResult = mockMvc.perform(post("/groups/" + groupId + "/members")
                             .header("Authorization", "Bearer " + accessToken)
@@ -156,20 +193,9 @@ class GroupControllerTest {
 
         @Test
         void shouldBeForbidden() throws Exception {
-            MvcResult createGroup = mockMvc.perform(post("/groups")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\": \"test\", \"description\":  \"Desc\", \"members\": [%d]}".formatted(inGroupId)))
-                    .andExpect(status().isCreated())
-                    .andReturn();
-            assertValidOpenApi(createGroup);
-            int groupId = JsonPath.read(createGroup.getResponse().getContentAsString(), "$.id");
+            Long groupId = createTestGroup();
+            leaveGroup(groupId);
 
-            MvcResult leaveAsAMember = mockMvc.perform(delete("/groups/" + groupId + "/members/me")
-                            .header("Authorization", "Bearer " + accessToken))
-                    .andExpect(status().isNoContent())
-                    .andReturn();
-            assertValidOpenApi(leaveAsAMember);
             MvcResult notAMemberAnymore = mockMvc.perform(post("/groups/" + groupId + "/members")
                             .header("Authorization", "Bearer " + accessToken)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -181,12 +207,7 @@ class GroupControllerTest {
 
         @Test
         void shouldBeNotFoundWhenInvitingToAPrivateConversation() throws Exception {
-            User dmPartner = userRepository.findById(dmPartnerId).orElseThrow();
-            User myUser = userRepository.findById((long) myUserId).orElseThrow();
-            PrivateConversation dm = new PrivateConversation();
-            dm.addMembers(List.of(Member.builder().user(myUser).build(), Member.builder().user(dmPartner).build()));
-            conversationRepository.save(dm);
-            Long dmId = dm.getId();
+            Long dmId = createPrivateConversation();
 
             MvcResult mvcResult = mockMvc.perform(post("/groups/" + dmId + "/members")
                             .header("Authorization", "Bearer " + accessToken)
@@ -213,14 +234,7 @@ class GroupControllerTest {
     class GetGroupInfo {
         @Test
         void shouldBeCreated() throws Exception {
-            MvcResult createGroup = mockMvc.perform(post("/groups")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\": \"test\", \"description\":  \"Desc\", \"members\": [%d]}".formatted(inGroupId)))
-                    .andExpect(status().isCreated())
-                    .andReturn();
-            assertValidOpenApi(createGroup);
-            int groupId = JsonPath.read(createGroup.getResponse().getContentAsString(), "$.id");
+            Long groupId = createTestGroup();
 
             MvcResult mvcResult = mockMvc.perform(get("/groups/" + groupId)
                             .header("Authorization", "Bearer " + accessToken))
@@ -231,12 +245,7 @@ class GroupControllerTest {
 
         @Test
         void shouldBeNotFoundWhenQueryingAPrivateConversation() throws Exception {
-            User dmPartner = userRepository.findById(dmPartnerId).orElseThrow();
-            User myUser = userRepository.findById((long) myUserId).orElseThrow();
-            PrivateConversation dm = new PrivateConversation();
-            dm.addMembers(List.of(Member.builder().user(myUser).build(), Member.builder().user(dmPartner).build()));
-            conversationRepository.save(dm);
-            Long dmId = dm.getId();
+            Long dmId = createPrivateConversation();
 
             MvcResult mvcResult = mockMvc.perform(get("/groups/" + dmId)
                             .header("Authorization", "Bearer " + accessToken))
@@ -247,19 +256,8 @@ class GroupControllerTest {
 
         @Test
         void shouldBeForbidden() throws Exception {
-            MvcResult createGroup = mockMvc.perform(post("/groups")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\": \"test\", \"description\":  \"Desc\", \"members\": [%d]}".formatted(inGroupId)))
-                    .andExpect(status().isCreated())
-                    .andReturn();
-            assertValidOpenApi(createGroup);
-            int groupId = JsonPath.read(createGroup.getResponse().getContentAsString(), "$.id");
-            MvcResult leaveAsAMember = mockMvc.perform(delete("/groups/" + groupId + "/members/me")
-                            .header("Authorization", "Bearer " + accessToken))
-                    .andExpect(status().isNoContent())
-                    .andReturn();
-            assertValidOpenApi(leaveAsAMember);
+            Long groupId = createTestGroup();
+            leaveGroup(groupId);
 
             MvcResult mvcResult = mockMvc.perform(get("/groups/" + groupId)
                             .header("Authorization", "Bearer " + accessToken))
