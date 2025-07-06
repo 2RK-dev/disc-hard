@@ -1,12 +1,12 @@
 package com._2rkdev.dischard.dto.common;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public record MessageDTO(
         Long id,
         String type,
         String textContent,
-        LocalDateTime timestamp,
+        OffsetDateTime timestamp,
         MemberDTO author
 ) {
 }

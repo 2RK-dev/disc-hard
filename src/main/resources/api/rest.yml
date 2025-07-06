@@ -304,8 +304,16 @@ paths:
                 $ref: '#/components/schemas/MessagePagedResponse'
         403:
           description: The user is not allowed to view the requested conversation
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
         404:
           description: The conversation with the provided ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
 
   /conversations/{conversationId}/members:
     get:
@@ -328,8 +336,16 @@ paths:
                 $ref: '#/components/schemas/MemberList'
         403:
           description: the user is not allowed to view the requested conversation
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
         404:
           description: the conversation with the provided ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: 'commons.yml#/components/schemas/ErrorDetails'
 
 components:
   schemas:
@@ -348,6 +364,7 @@ components:
         type:
           type: string
           description: type of the conversation, in this context a group
+          enum: [ group ]
         name:
           type: string
           description: name of the group
@@ -381,41 +398,48 @@ components:
     ConversationListResponse:
       type: array
       items:
-        oneOf:
-          - $ref: '#/components/schemas/PrivateConversation'
-          - $ref: '#/components/schemas/GroupConversation'
-        discriminator:
-          propertyName: type
-          mapping:
-            private: '#/components/schemas/PrivateConversation'
-            group: '#/components/schemas/GroupConversation'
+        $ref: '#/components/schemas/Conversation'
 
-    ConversationBase:
+    Conversation:
+      anyOf:
+        - $ref: '#/components/schemas/PrivateConversation'
+        - $ref: '#/components/schemas/GroupConversation'
+      description: A conversation that can be either private or group
+
+    PrivateConversation:
       type: object
       properties:
         id:
           type: number
         type:
           type: string
+          enum: [ private ]
+          example: private
+        contact:
+          $ref: 'commons.yml#/components/schemas/Member'
+          description: The other member of the private conversation
       required: [ id, type ]
 
-    PrivateConversation:
-      allOf:
-        - $ref: '#/components/schemas/ConversationBase'
-        - type: object
-          properties:
-            type:
-              type: string
-              enum: [ private ]
-            contact:
-              $ref: 'commons.yml#/components/schemas/Member'
-              description: The other member of the private conversation
-          required: [ type ]
-
     GroupConversation:
-      allOf:
-        - $ref: '#/components/schemas/ConversationBase'
-        - $ref: '#/components/schemas/GroupInfo'
+      type: object
+      properties:
+        id:
+          type: number
+        type:
+          type: string
+          enum: [ group ]
+          example: group
+        name:
+          type: string
+          description: name of the group
+        description:
+          type: string
+          description: description of the group
+        createdAt:
+          type: string
+          format: date-time
+          description: time of creation of the group
+      required: [ id, type ]
 
     UserListResponse:
       type: array
