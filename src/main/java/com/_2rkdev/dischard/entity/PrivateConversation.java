@@ -8,4 +8,5 @@ import lombok.NoArgsConstructor;
 @DiscriminatorValue("PRIVATE")
 @NoArgsConstructor
 public class PrivateConversation extends Conversation{
+
 }

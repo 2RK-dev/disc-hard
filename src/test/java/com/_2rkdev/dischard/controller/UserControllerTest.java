@@ -3,6 +3,7 @@ package com._2rkdev.dischard.controller;
 import com._2rkdev.dischard.repository.UserRepository;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.function.Executable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,6 +11,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com._2rkdev.dischard.assertion.OpenApiAssertions.assertValidOpenApi;
 import static com._2rkdev.dischard.assertion.OpenApiAssertions.assertValidOpenApiResponse;
@@ -31,14 +35,12 @@ class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    private static final String VALID_REGISTRATION_JSON =
+            "{\"email\":\"user@mail.com\",\"password\":\"password\", \"passwordConfirm\": \"password\", \"name\": \"ahaha\"}";
+
     @BeforeEach
     void setUp() throws Exception {
-        MvcResult registerResult = mockMvc.perform(post("/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"user@mail.com\",\"password\":\"password\", \"passwordConfirm\": \"password\", \"name\": \"ahaha\"}")
-                ).andExpect(status().isOk())
-                .andReturn();
-        accessToken = JsonPath.read(registerResult.getResponse().getContentAsString(), "$.accessToken");
+        accessToken = registerUserAndGetToken();
     }
 
     @AfterEach
@@ -46,47 +48,94 @@ class UserControllerTest {
         userRepository.deleteAll();
     }
 
+    /**
+     * Helper method to register a user and get an access token
+     */
+    private String registerUserAndGetToken() throws Exception {
+        MvcResult registerResult = mockMvc.perform(post("/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_REGISTRATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+        return JsonPath.read(registerResult.getResponse().getContentAsString(), "$.accessToken");
+    }
+
+    /**
+     * Helper method to perform authenticated requests
+     */
+    private MvcResult performAuthenticatedRequest(String method, String endpoint, String content) throws Exception {
+        var requestBuilder = switch (method.toLowerCase()) {
+            case "patch" -> patch(endpoint);
+            case "put" -> put(endpoint);
+            case "get" -> get(endpoint);
+            case "post" -> post(endpoint);
+            default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+        };
+
+        requestBuilder.header("Authorization", "Bearer " + accessToken);
+
+        if (content != null) {
+            requestBuilder.contentType(MediaType.APPLICATION_JSON).content(content);
+        }
+
+        return mockMvc.perform(requestBuilder).andReturn();
+    }
+
+    /**
+     * Helper method to register additional user and get user ID
+     */
+    private int registerAdditionalUser(String email) throws Exception {
+        String registrationJson = "{\"email\":\"%s\",\"password\":\"pissword\", \"passwordConfirm\": \"pissword\", \"name\": \"%s\"}"
+                .formatted(email, "Another");
+        MvcResult registerResult = mockMvc.perform(post("/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registrationJson))
+                .andExpect(status().isOk())
+                .andReturn();
+        return JsonPath.read(registerResult.getResponse().getContentAsString(), "$.user.id");
+    }
+
     @Nested
     class UpdateProfile {
         @Test
         void shouldBeBadRequest() throws Exception {
-            MvcResult blankNameRequest = mockMvc.perform(patch("/profile")
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"name\":\"\"}")
-            ).andReturn();
-            MvcResult noBodyRequest = mockMvc.perform(patch("/profile")
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{}")
-            ).andReturn();
+            String[] invalidRequests = {
+                    "{\"name\":\"\"}",
+                    "{}"
+            };
 
-            Assertions.assertAll(
-                    () -> assertThat(blankNameRequest.getResponse().getStatus()).isEqualTo(400),
-                    () -> assertValidOpenApi(blankNameRequest),
-                    () -> assertThat(noBodyRequest.getResponse().getStatus()).isEqualTo(400),
-                    () -> assertValidOpenApi(noBodyRequest)
+            List<MvcResult> results = new ArrayList<>();
+            for (String request : invalidRequests) {
+                results.add(performAuthenticatedRequest("patch", "/profile", request));
+            }
+
+            Assertions.assertAll(results.stream()
+                    .map(result -> (Executable) () -> {
+                        assertThat(result.getResponse().getStatus()).isEqualTo(400);
+                        assertValidOpenApi(result);
+                    })
+                    .toArray(Executable[]::new)
             );
         }
 
         @Test
         void shouldBeOk() throws Exception {
-            MvcResult goodRequest = mockMvc.perform(patch("/profile")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\":\"Naruto\"}")
-                    ).andExpect(status().isOk())
-                    .andReturn();
-            MvcResult additionalFieldsRequest = mockMvc.perform(patch("/profile")
-                    .header("Authorization", "Bearer " + accessToken)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"name\":\"Naruto\", \"age\": 100, \"gender\": \"Male\", \"email\": \"<EMAIL>\"}")
-            ).andReturn();
-            Assertions.assertAll(
-                    () -> assertThat(goodRequest.getResponse().getStatus()).isEqualTo(200),
-                    () -> assertValidOpenApi(goodRequest),
-                    () -> assertThat(additionalFieldsRequest.getResponse().getStatus()).isEqualTo(200),
-                    () -> assertValidOpenApiResponse(additionalFieldsRequest)
+            String[] validRequests = {
+                    "{\"name\":\"Naruto\"}",
+                    "{\"name\":\"Naruto\", \"age\": 100, \"gender\": \"Male\", \"email\": \"<EMAIL>\"}"
+            };
+
+            List<MvcResult> results = new ArrayList<>();
+            for (String request : validRequests) {
+                results.add(performAuthenticatedRequest("patch", "/profile", request));
+            }
+
+            Assertions.assertAll(results.stream()
+                    .map(result -> (Executable) () -> {
+                        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+                        assertValidOpenApiResponse(result);
+                    })
+                    .toArray(Executable[]::new)
             );
         }
     }
@@ -95,50 +144,39 @@ class UserControllerTest {
     class ChangePassword {
         @Test
         void shouldBeOk() throws Exception {
-            MvcResult goodRequest = mockMvc.perform(put("/password")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"old\": \"password\", \"new\":  \"newpass\", \"confirm\":  \"newpass\"}"))
-                    .andExpect(status().isNoContent())
-                    .andReturn();
-            assertValidOpenApi(goodRequest);
+            MvcResult result = performAuthenticatedRequest("put", "/password",
+                    "{\"old\": \"password\", \"new\":  \"newpass\", \"confirm\":  \"newpass\"}");
+            assertThat(result.getResponse().getStatus()).isEqualTo(204);
+            assertValidOpenApi(result);
         }
 
         @Test
         void shouldBeBadRequest() throws Exception {
-            MvcResult noOldPassword = mockMvc.perform(put("/password")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"old\": \"\", \"new\":  \"newpass\", \"confirm\":  \"wrongpass\"}"))
-                    .andReturn();
-            MvcResult noNewPassword = mockMvc.perform(put("/password")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"old\": \"password\", \"new\":  \"\", \"confirm\":  \"wrongpass\"}"))
-                    .andReturn();
-            MvcResult noConfirmPassword = mockMvc.perform(put("/password")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"old\": \"password\", \"new\":  \"newpass\", \"confirm\":  \"\"}"))
-                    .andReturn();
-            Assertions.assertAll(
-                    () -> assertThat(noOldPassword.getResponse().getStatus()).isEqualTo(400),
-                    () -> assertValidOpenApi(noOldPassword),
-                    () -> assertThat(noNewPassword.getResponse().getStatus()).isEqualTo(400),
-                    () -> assertValidOpenApi(noNewPassword),
-                    () -> assertThat(noConfirmPassword.getResponse().getStatus()).isEqualTo(400),
-                    () -> assertValidOpenApi(noConfirmPassword)
+            String[] invalidRequests = {
+                    "{\"old\": \"\", \"new\":  \"newpass\", \"confirm\":  \"wrongpass\"}",
+                    "{\"old\": \"password\", \"new\":  \"\", \"confirm\":  \"wrongpass\"}",
+                    "{\"old\": \"password\", \"new\":  \"newpass\", \"confirm\":  \"\"}"
+            };
+
+            List<MvcResult> results = new ArrayList<>();
+            for (String request : invalidRequests) {
+                results.add(performAuthenticatedRequest("put", "/password", request));
+            }
+
+            Assertions.assertAll(results.stream()
+                    .map(result -> (Executable) () -> {
+                        assertThat(result.getResponse().getStatus()).isEqualTo(400);
+                        assertValidOpenApi(result);
+                    })
+                    .toArray(Executable[]::new)
             );
         }
 
         @Test
         void shouldBeUnauthorized() throws Exception {
-            MvcResult result = mockMvc.perform(put("/password")
-                            .header("Authorization", "Bearer " + accessToken)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"old\": \"nottheold\", \"new\":  \"newpass\", \"confirm\":  \"newpass\"}"))
-                    .andExpect(status().isUnauthorized())
-                    .andReturn();
+            MvcResult result = performAuthenticatedRequest("put", "/password",
+                    "{\"old\": \"nottheold\", \"new\":  \"newpass\", \"confirm\":  \"newpass\"}");
+            assertThat(result.getResponse().getStatus()).isEqualTo(401);
             assertValidOpenApi(result);
         }
     }
@@ -147,14 +185,9 @@ class UserControllerTest {
     class ListUsers {
         @Test
         void shouldBeOk() throws Exception {
-            mockMvc.perform(post("/register")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"email\":\"another@mail.com\",\"password\":\"pissword\", \"passwordConfirm\": \"pissword\", \"name\": \"Another\"}")
-            ).andExpect(status().isOk());
-            MvcResult result = mockMvc.perform(get("/users")
-                            .header("Authorization", "Bearer " + accessToken))
-                    .andExpect(status().isOk())
-                    .andReturn();
+            registerAdditionalUser("another@mail.com");
+            MvcResult result = performAuthenticatedRequest("get", "/users", null);
+            assertThat(result.getResponse().getStatus()).isEqualTo(200);
             assertValidOpenApi(result);
         }
     }
@@ -163,25 +196,16 @@ class UserControllerTest {
     class GetUserInfo {
         @Test
         void shouldBeOk() throws Exception {
-            MvcResult registerResult = mockMvc.perform(post("/register")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"email\":\"anotherone@mail.com\",\"password\":\"pissword\", \"passwordConfirm\": \"pissword\", \"name\": \"Another\"}"))
-                    .andExpect(status().isOk())
-                    .andReturn();
-            int userId = JsonPath.read(registerResult.getResponse().getContentAsString(), "$.user.id");
-            MvcResult result = mockMvc.perform(get("/users/" + userId)
-                            .header("Authorization", "Bearer " + accessToken))
-                    .andExpect(status().isOk())
-                    .andReturn();
+            int userId = registerAdditionalUser("anotherone@mail.com");
+            MvcResult result = performAuthenticatedRequest("get", "/users/" + userId, null);
+            assertThat(result.getResponse().getStatus()).isEqualTo(200);
             assertValidOpenApi(result);
         }
 
         @Test
         void shouldBeNotFound() throws Exception {
-            MvcResult result = mockMvc.perform(get("/users/0")
-                            .header("Authorization", "Bearer " + accessToken))
-                    .andExpect(status().isNotFound())
-                    .andReturn();
+            MvcResult result = performAuthenticatedRequest("get", "/users/0", null);
+            assertThat(result.getResponse().getStatus()).isEqualTo(404);
             assertValidOpenApi(result);
         }
     }
